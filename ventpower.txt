@@ -1,0 +1,110 @@
+PROGRAM VentPower
+VAR
+Vent_power : REAL:=30; (* После перезагрузки ПЛК задаём начальную мощность приточного вента - условных 30% *)
+Vent_power_out : INT:=30; (* После перезагрузки ПЛК задаём начальную мощность вытяжного вента - условных 30% *)
+CO2_old : REAL:=410; (* После перезагрузки ПЛК задаём принудительно последнее значение CO2 = 410 (абсолютно свежий воздух) *)
+Period_vent_switch : INT:=60; (* Период переключения режимов работы вентилятора по показаниям датчиков CO2, секунды*)
+Timer1 : TON;
+Timer1Q : BOOL;
+count : INT:=0;
+CO2_max : REAL;
+tTimerValue : TIME;
+
+
+
+END_VAR
+
+
+
+
+
+tTimerValue := DINT_TO_TIME(Period_vent_switch*1000);
+
+IF (iobroker.Vent =TRUE OR iobroker.Vent_out=TRUE ) THEN
+
+	Timer1(IN:=NOT Timer1Q , PT:=tTimerValue , Q=>Timer1Q , ET=> );
+	IF timer1.q THEN
+		CO2_max:=MAX(iobroker.Kitchen_room_CO2, MAX (iobroker.Bed_room_CO2, MAX (iobroker.Child_big_room_CO2, iobroker.Child_small_room_CO2)));
+		IF (  (CO2_max >=  CO2_old-10 )  AND ( CO2_max >  INT_TO_REAL(iobroker.Target_CO2)*1.05 ) ) THEN
+			Vent_power:=Vent_power+2;
+		END_IF
+		count:=count+1;
+		IF (count = 5)	THEN
+			IF (  CO2_max <=  INT_TO_REAL(iobroker.Target_CO2)*0.99) THEN
+				Vent_power:=Vent_power-2;
+			END_IF
+			count:=1;
+		END_IF
+
+		IF (Vent_power>80) THEN
+			Vent_power:=80;
+		END_IF
+		IF(Vent_power<20) THEN
+			Vent_power:=20;
+		END_IF
+
+		IF (Vent_Power > 75  ) THEN
+			iobroker.Vent_input_level:=200;									(* 200 м. куб в час при подаче напряжения на приточный вентилятор  220V *)
+			HW_vent_in_trans_160_220:=FALSE;
+			HW_vent_in_trans_LO_HI:=FALSE;
+			IF (HW_kitchen_button_vent_out=FALSE) THEN					(* Если НЕ  работает кухонная надплитная вытяжка, то нужна тонкая регулировка вытяжного вента *)
+				HW_vent_out_level:=REAL_TO_WORD(32767*60/100);			(* 200  м. куб в час при подаче x  DC напряжения на вытяжной вентилятор  *)
+				Vent_power_out:=45;
+			END_IF
+
+			ELSIF (Vent_Power>50 ) THEN
+
+				iobroker.Vent_input_level:=180; 								(* 180/200 м. куб в час при подаче напряжения на приточный вентилятор  220V *)
+				HW_vent_in_trans_160_220:=FALSE;
+				HW_vent_in_trans_LO_HI:=FALSE;
+				IF (HW_kitchen_button_vent_out=FALSE) THEN				(* Если НЕ  работает кухонная надплитная вытяжка, то нужна тонкая регулировка вытяжного вента *)
+					HW_vent_out_level:=REAL_TO_WORD(32767*45/100); 		(* 180  м. куб в час при подаче x  DC напряжения на вытяжной вентилятор  *)
+					Vent_power_out:=40;
+				END_IF
+
+
+			ELSIF (Vent_Power>35 AND Vent_Power<=50) THEN
+
+					iobroker.Vent_input_level:=150;							 (* 150 м. куб в час при подаче напряжения на приточный вентилятор  160V *)
+					HW_vent_in_trans_160_220:=TRUE;
+					HW_vent_in_trans_LO_HI:=FALSE;
+					IF (HW_kitchen_button_vent_out=FALSE) THEN			(* Если НЕ  работает кухонная надплитная вытяжка, то нужна тонкая регулировка вытяжного вента *)
+						HW_vent_out_level:=REAL_TO_WORD(32767*35/100);	(* 150  м. куб в час при подаче x  DC напряжения на вытяжной вентилятор  *)
+						Vent_power_out:=35;
+					END_IF
+
+			ELSIF (Vent_Power>25 AND Vent_Power<=35) THEN
+
+					iobroker.Vent_input_level:=110; (* 130V*)					 (* 110 м. куб в час при подаче напряжения на приточный вентилятор  130V *)
+					HW_vent_in_trans_105_130:=FALSE;
+					HW_vent_in_trans_LO_HI:=TRUE;
+					IF (HW_kitchen_button_vent_out=FALSE) THEN			(* Если НЕ  работает кухонная надплитная вытяжка, то нужна тонкая регулировка вытяжного вента *)
+						HW_vent_out_level:=REAL_TO_WORD(32767*25/100);	(* 110  м. куб в час при подаче x  DC напряжения на вытяжной вентилятор  *)
+						Vent_power_out:=25;
+					END_IF
+
+			ELSE	(* Vent_Power > 80 *)
+
+				iobroker.Vent_input_level:=80; (* 105V*)						 (* 80 м. куб в час при подаче напряжения на приточный вентилятор  105V *)
+				HW_vent_in_trans_105_130:=TRUE;
+				HW_vent_in_trans_LO_HI:=TRUE;
+				IF (HW_kitchen_button_vent_out=FALSE) THEN				(* Если НЕ  работает кухонная надплитная вытяжка, то нужна тонкая регулировка вытяжного вента *)
+					HW_vent_out_level:=REAL_TO_WORD(32767*20/100);		(* 80  м. куб в час при подаче x  DC напряжения на вытяжной вентилятор  *)
+					Vent_power_out:=20;
+				END_IF
+
+
+			END_IF	(* Vent_Power > 80 *)
+			CO2_old:=CO2_max;
+			iobroker.Vent_output_level:=Vent_power_out;
+	END_IF	(* Timer1 *)
+
+ELSE	 (* Vent=TRUE*)
+
+	iobroker.Vent_input_level:=0;
+	IF (HW_kitchen_button_vent_out=FALSE) THEN
+		HW_vent_out_level:=REAL_TO_WORD(32767*20/100);
+	END_IF
+	iobroker.Vent_output_level:=Vent_power_out;
+
+END_IF   (* Vent=TRUE*)
