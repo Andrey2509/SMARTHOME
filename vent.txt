@@ -1,9 +1,0 @@
-on({id: "javascript.0.Target_level_Hum", change: "any"}, function (obj) {
-  var value = obj.state.val;
-  setState("beckhoff.0.plc.IOBROKER.TARGET_HUM",value);
-});
-
-on({id: "javascript.0.Target_level_CO2", change: "any"}, function (obj) {
-  var value = obj.state.val;
-  setState("beckhoff.0.plc.IOBROKER.TARGET_CO2",value);
-});
