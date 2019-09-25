@@ -1,0 +1,122 @@
+
+
+createState("html_table");
+
+on({id: /beckhoff.0.plc.IOBROKER.*(TEMP|CO2|VENT|STEAM)*/ , change: "any"}, function (obj) {
+
+    //При изменении оперативных данных формируем html-таблицу климата по комнатам
+    var css="<STYLE TYPE=\\\"text/css\\\"> TD{font-family: Arial; font-size: 11pt;} </STYLE>";
+    var obj_html = "\" <table  border='2' style='width:100%; font: 11pt arial' > <col width=400><col width=200><col width=200><col width=100>  ";
+    var table_head ="<tr><td><b></b></td><td><b>Температура</b></td><td><b>Влажность</b></td><td><b>CO2</b></td></tr>";
+    obj_html=obj_html+table_head;
+
+    var tr="<tr>";
+    var tr2="</tr>";
+    var td2='<td><a> Кухня </a></td>';
+    var td3="<td><font color=red>"+getState("beckhoff.0.plc.IOBROKER.KITCHEN_ROOM_TEMP").val.toFixed(1)+"</font></td>";
+    var td4="<td><font color=blue>"+getState("beckhoff.0.plc.IOBROKER.KITCHEN_ROOM_HUM").val.toFixed(1)+"</font></td>";
+    var td5="<td><font color=green>"+getState("beckhoff.0.plc.IOBROKER.KITCHEN_ROOM_CO2").val+"</font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+    td2='<td><a> Спальная </a></td>';
+    td3="<td><font color=red>"+getState("beckhoff.0.plc.IOBROKER.BED_ROOM_TEMP").val.toFixed(1)+"</font></td>";
+    td4="<td><font color=blue>"+getState("beckhoff.0.plc.IOBROKER.BED_ROOM_HUM").val.toFixed(1)+"</font></td>";
+    td5="<td><font color=green>"+getState("beckhoff.0.plc.IOBROKER.BED_ROOM_CO2").val+"</font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+    td2='<td><a> Детская большая </a></td>';
+    td3="<td><font color=red>"+getState("beckhoff.0.plc.IOBROKER.CHILD_BIG_ROOM_TEMP").val.toFixed(1)+"</font></td>";
+    td4="<td><font color=blue>"+getState("beckhoff.0.plc.IOBROKER.CHILD_BIG_ROOM_HUM").val.toFixed(1)+"</font></td>";
+    td5="<td><font color=green>"+getState("beckhoff.0.plc.IOBROKER.CHILD_BIG_ROOM_CO2").val+"</font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+    td2='<td><a> Детская малая </a></td>';
+    td3="<td><font color=red>"+getState("beckhoff.0.plc.IOBROKER.CHILD_SMALL_ROOM_TEMP").val.toFixed(1)+"</font></td>";
+    td4="<td><font color=blue>"+getState("beckhoff.0.plc.IOBROKER.CHILD_SMALL_ROOM_HUM").val.toFixed(1)+"</font></td>";
+    td5="<td><font color=green>"+getState("beckhoff.0.plc.IOBROKER.CHILD_SMALL_ROOM_CO2").val+"</font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+
+    td2='<td><a> Город </a></td>';
+    td3="<td><font color=red>"+getState("javascript.0.narodmon.sensor.mid"/*Sensor from narodmon*/).val+"</font></td>";
+    td4="<td><font color=blue>"+getState("javascript.0.narodmon.sensor.airport"/*Sensor from narodmon*/).val+"</font></td>";
+    td5="<td>n/d</td>";
+    obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+    td2='<td><a> Окно </a></td>';
+    td3="<td><font color=red>"+getState("beckhoff.0.plc.IOBROKER.KITCHEN_ROOM_TEMPOUT").val.toFixed(1)+"</font></td>";
+    td4="<td>n/d</td>";
+    td5="<td>n/d</td>";
+    obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+    obj_html = obj_html +"</table>\"";
+    setState("html_table",obj_html);
+
+    
+    //При изменении оперативных данных формируем html-таблицу текущих параметров вентустановки
+    var css="<STYLE TYPE=\\\"text/css\\\"> TD{font-family: Arial; font-size: 11pt;} </STYLE>";
+    var obj_html = "\" <table  border='2' style='width:100%; font: 11pt arial' > <col width=300><col width=100><col width=150>  ";
+    var table_head ="<tr><td><b>Имя</b></td><td><b>N1</b></td><td><b>N2</b></td></tr>";
+    var tr="<tr>";
+    var tr2="</tr>";
+    var td2='<td><a> Приточный вентилятор </a></td>';
+    var vent_in="Откл";
+    if (getState("beckhoff.0.plc.IOBROKER.VENT").val == 1)
+        vent_in="Вкл";
+
+    var td3="<td><font color=red>"+vent_in+"</font></td>";
+    var td4="<td><font color=blue>"+getState("beckhoff.0.plc.IOBROKER.VENT_INPUT_LEVEL").val+"м.куб/ч</font></td>";
+    var td5="<td><font color=green></font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+tr2;
+
+    var vent_out="Откл";
+    if (getState("beckhoff.0.plc.IOBROKER.VENT_OUT").val == 1)
+        vent_out="Вкл";
+
+    td2='<td><a> Вытяжной вентилятор </a></td>';
+    td3="<td><font color=red>"+vent_out+"</font></td>";
+    td4="<td><font color=blue>"+getState("beckhoff.0.plc.IOBROKER.VENT_OUTPUT_LEVEL").val+"%</font></td>";
+    td5="<td><font color=green></font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+tr2;
+
+    td2='<td><a> Мощность увлажнителя установка/текущая </a></td>';
+    td3="<td><font color=red>"+getState("beckhoff.0.plc.IOBROKER.STEAM_LEVEL").val+"%</font></td>";
+    td4="<td><font color=blue>"+getState("beckhoff.0.plc.IOBROKER.STEAM_REAL").val+"%</font></td>";
+    td5="<td><font color=green></font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+tr2;
+
+    if (getState("beckhoff.0.plc.IOBROKER.VENT_VALVE_STATUS").val == 1)
+        var vent_valve="Вкл";
+    if (getState("beckhoff.0.plc.IOBROKER.VENT_VALVE_STATUS").val === 0)
+        vent_valve="Откл";
+    if (getState("beckhoff.0.plc.IOBROKER.VENT_VALVE_STATUS").val == 2)
+        vent_valve="Перекл...";
+
+    td2='<td><a> Клапан притока </a></td>';
+    td3="<td><font color=red>"+vent_valve+"</font></td>";
+    td4="<td><font color=blue></font></td>";
+    td5="<td><font color=green></font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+tr2;
+
+
+    var vent_relay="Откл";
+    if (getState("beckhoff.0.plc.IOBROKER.VENT_PRESSURE_RELAY").val == 1)
+        vent_relay="Вкл";
+
+    td2='<td><a> Реле давления </a></td>';
+    td3="<td><font color=red>"+vent_relay+"</font></td>";
+    td4="<td><font color=blue></font></td>";
+    td5="<td><font color=green></font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+tr2;
+
+    td2='<td><a> Температура притока </a></td>';
+    td3="<td><font color=red>"+getState("beckhoff.0.plc.IOBROKER.TEMP_VENT_IN").val.toFixed(1)+"C</font></td>";
+    td4="<td><font color=blue></font></td>";
+    td5="<td><font color=green></font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+tr2;
+
+    obj_html = obj_html +"</table>\"";
+    setState("html_vent_status_table",obj_html);
+
+
+});
