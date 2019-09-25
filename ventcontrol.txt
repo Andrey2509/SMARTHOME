@@ -1,0 +1,90 @@
+       PROGRAM VentControl
+VAR
+	Temperature_max_to_heat		: REAL:=17;		(* Максимальная температура наружнего воздуха при которой разрешено включать воздухонагреватель *)
+	Temperature_min_for_steam	: REAL:=17;		(* Минимальная температура воздуха в вент канале для разрешения работы увлажнителя *)
+	gisterezis					: REAL:=0.2;		(* Гистерезис  разрешения включения воздухонагревателя, градусы цельсия *)
+
+
+END_VAR
+
+
+
+
+
+
+
+
+(* Состояние приточного клапана *)
+
+IF (HW_sensor_vent_valve_opened=TRUE) THEN
+	iobroker.Vent_valve_status:=1;
+END_IF
+
+IF (HW_sensor_vent_valve_closed=TRUE) THEN
+	iobroker.Vent_valve_status:=0;
+END_IF
+
+IF (HW_sensor_vent_valve_closed=FALSE AND HW_sensor_vent_valve_opened=FALSE) THEN
+	iobroker.Vent_valve_status:=2;
+END_IF
+
+
+IF (HW_kitchen_button_vent_out=TRUE) THEN	(* Если активирована кнопка надплитной вытяжки*)
+	HW_vent_out:=TRUE;						(* Включаем вытяжной вент *)
+	HW_vent_out_level:=32767;					(* Подаём управляющий сигнал DC на максимум *)
+	HW_kitchen_vent_out:=TRUE;				(* Включаем вент надплитной вытяжки *)
+ELSE
+	HW_kitchen_vent_out:=FALSE;				(* Оключаем вент надплитной вытяжки *)
+	IF (iobroker.Vent_out=FALSE) THEN			(* Если уставка работы вытяжного вента = FALSE*)
+		HW_vent_out:=FALSE;					(* Отключаем вытяжной вент *)
+	ELSE
+		HW_vent_out:=TRUE;					(*  Включаем вытяжной вент  *)
+	END_IF
+END_IF
+
+
+IF (iobroker.Vent=FALSE) THEN
+	HW_steam:=FALSE;
+	HW_vent_in_heat:=FALSE;
+	HW_vent_valve:=FALSE;	
+	HW_trans_power:=FALSE;
+ELSE
+	HW_vent_valve:=TRUE;
+	IF (HW_sensor_vent_valve_opened=TRUE) THEN
+		HW_trans_power:=TRUE;
+		IF (HW_vent_reay_pressure=TRUE) THEN
+			IF (iobroker.Temp_vent_in>Temperature_min_for_steam) THEN
+				HW_steam:=iobroker.Steam;
+			ELSE
+				HW_steam:=FALSE;
+			END_IF
+			IF (iobroker.Vent_heat=2) THEN
+				IF (iobroker.Kitchen_room_tempout < Temperature_max_to_heat-gisterezis) THEN
+					HW_vent_in_heat:=TRUE;
+					IF (iobroker.Vent_heat_level=TRUE) THEN
+						HW_vent_in_heat_level:=TRUE;
+					END_IF
+				END_IF
+				IF (iobroker.Kitchen_room_tempout > Temperature_max_to_heat+gisterezis) THEN
+					HW_vent_in_heat:=FALSE;
+				END_IF
+			ELSE
+				IF (iobroker.Vent_heat=1) THEN
+					HW_vent_in_heat:=TRUE;
+					IF (iobroker.Vent_heat_level=TRUE) THEN
+						HW_vent_in_heat_level:=TRUE;
+					ELSE
+						HW_vent_in_heat_level:=FALSE;
+					END_IF
+				END_IF
+				IF (iobroker.Vent_heat=0) THEN
+					HW_vent_in_heat:=FALSE;
+				END_IF
+			END_IF
+		END_IF (*vent_relay_pressure*)
+	END_IF (*vent_valve_opened*)
+END_IF (*Vent*)
+
+
+
+
