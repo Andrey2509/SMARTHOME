@@ -1,0 +1,385 @@
+createState('Sql_pir_history');
+createState("html_table");
+
+var fs = require('fs');
+var glob = require("glob");
+function fileExists(filePath)
+{
+    try
+    {
+        return fs.statSync(filePath).isFile();
+    }
+    catch (err)
+    {
+        return false;
+    }
+}
+
+
+
+function table_security(period){
+    var now = new Date();
+    now.setMinutes(-period);
+    sendTo('sql.0', 'query', 'SELECT a.id,a.ts,a.val, b.name FROM iobroker.ts_string as a INNER JOIN  iobroker.datapoints as b ON a.id = b.id WHERE ts >= ' + now.getTime() + ' AND a.id in (SELECT id FROM iobroker.datapoints WHERE name like "javascript.0.pir_%_hist" or name like "javascript.0.gerkon_%_hist") order by a.ts desc', function (result) {    
+        if (result.error) {
+                log(result.error);} 
+        else 
+                    
+            {
+
+                
+                        var obj = JSON.stringify(result.result);
+                        obj = JSON.parse(obj );
+                        var css="<STYLE TYPE=\\\"text/css\\\"> TD{font-family: Arial; font-size: 11pt;} </STYLE>";
+                        var obj_html = "\" <table  border='1' style='width:100%; font: 11pt arial' > <col width=500><col width=500><col width=1000>  ";
+                        var table_head ="<tr><td>Дата</td><td>Датчик</td><td>Снимок/Видео</td></tr>";
+                        obj_html=obj_html+table_head;
+                        if (obj.length>0)
+                        {
+                            for(var i=0;i<obj.length;i++)
+                            {
+                                var objn = getObject (obj[i]["name"],'name'); 
+                                var id_name=objn.common.name;
+
+                                var tr="<tr>";
+                                var tr2="</tr>";
+                                var td1="<td>"+formatDate(new Date(obj[i]["ts"]), "JJJJ.MM.TT SS:mm:ss")+"</td>";
+                                var pir_name = id_name;
+                                pir_name=pir_name.replace('pir_','');
+                                pir_name=pir_name.replace('gerkon_','');
+                                pir_name=pir_name.replace('_image_hist','');
+                                pir_name=pir_name.replace('_video_hist','');
+                            
+                                var camera_name = "";
+                                var td2 ="<td>"+pir_name+"</td>";
+                            
+                                var big_img='';
+                                var small_img ='';
+                            
+                                var td3='<td></td>';
+                            
+                                if (id_name.match(/.*image.*/))
+                                    {
+                                    big_img=JSON.stringify(obj[i]["val"]);  
+                                    small_img=JSON.stringify( obj[i]["val"]);
+                                    small_img=small_img.replace('.jpg','_small.jpg');
+                                    big_img=big_img.replace('/home/iobroker/iobroker-data/files','');
+                                    big_img=big_img.substring(0, big_img.length - 1);
+                                    big_img=big_img.substring(1);
+                                    small_img=small_img.replace('/home/iobroker/iobroker-data/files','');
+                                    small_img=small_img.substring(0, small_img.length - 1);
+                                    small_img=small_img.substring(1);
+                                    //log('small_img='+small_img);
+                                    td3="<td><a href="+big_img+" target=\\\"_blank\\\"><img src="+small_img+" height='100' width='100' /img></a></td>";
+                                    }
+                        
+                                if (id_name.match(/.*video.*/))
+                                    {
+                                    var video_file=JSON.stringify(obj[i]["val"]);  
+                                    // log("video_file1="+video_file);
+                                    video_file=video_file.replace('/home/iobroker/iobroker-data/files','');
+                                    video_file=video_file.substring(0, video_file.length - 1);
+                                    video_file=video_file.substring(1);
+                                    // log("video_file2="+video_file);
+                                    td3="<td><a href="+video_file+">Video</a></td>";
+                                    }
+
+                        
+                                                    
+                                obj_html = obj_html + tr+td1+td2+td3+tr2;
+                    
+                            } //for   
+                        }
+                        
+                        obj_html = obj_html +"</table>\"";
+
+                setState("html_table",obj_html);
+
+            } 
+            
+    });//sendTo
+    
+    
+} //function
+
+function table_events(period){
+    var now = new Date();
+    now.setMinutes(-period);
+    sendTo('sql.0', 'query', 'SELECT count(a.id) as count FROM iobroker.ts_bool as a INNER JOIN  iobroker.datapoints as b ON a.id = b.id WHERE ts >='+ now.getTime() + ' AND a.id in (SELECT id FROM iobroker.datapoints WHERE name="beckhoff.0.plc.IOBROKER.SENSOR_SUPPLY" )', function (result) {
+        if (result.error) {
+            log(result.error);
+        } else {
+            var obj = JSON.stringify(result.result);
+            obj = JSON.parse(obj );
+            var count1=obj[0]["count"];
+            setState("javascript.0.Count_electro",count1);
+            
+        
+        
+          }
+    });   
+    sendTo('sql.0', 'query', 'SELECT count(a.id) as count FROM iobroker.ts_bool as a INNER JOIN  iobroker.datapoints as b ON a.id = b.id WHERE ts >='+ now.getTime() + ' AND a.id in (SELECT id FROM iobroker.datapoints WHERE  name="beckhoff.0.plc.IOBROKER.SMOKE")', function (result) {
+        if (result.error) {
+            log(result.error);
+        } else {
+            var obj = JSON.stringify(result.result);
+            obj = JSON.parse(obj );
+            var count1=obj[0]["count"];
+            setState("javascript.0.Count_smoke",count1);
+            }
+    });   
+
+           
+    sendTo('sql.0', 'query', 'SELECT count(a.id) as count FROM iobroker.ts_string as a INNER JOIN  iobroker.datapoints as b ON a.id = b.id WHERE ts >='+ now.getTime() + ' AND a.id in (SELECT id FROM iobroker.datapoints WHERE  name like "javascript.0.pir_%_hist" or name like "javascript.0.gerkon_%_hist")', function (result) {
+        if (result.error) {
+            log(result.error);
+        } else {
+            var obj = JSON.stringify(result.result);
+            obj = JSON.parse(obj );
+            var count2=obj[0]["count"];
+            setState("javascript.0.Count_security",count2);
+         
+        }
+        });  
+    
+}
+
+function table_sensors(period){
+    var now = new Date();
+    now.setMinutes(-period);
+    sendTo('sql.0', 'query', 'SELECT a.id,a.ts,a.val, b.name FROM iobroker.ts_bool as a INNER JOIN  iobroker.datapoints as b ON a.id = b.id WHERE ts >= ' + now.getTime() + ' AND a.id in (SELECT id FROM iobroker.datapoints WHERE name="beckhoff.0.plc.IOBROKER.SENSOR_SUPPLY" or name="beckhoff.0.plc.IOBROKER.SMOKE") order by a.ts desc', function (result) {
+     if (result.error) {
+        log(result.error);
+    } else {
+    
+            var obj = JSON.stringify(result.result);
+            obj = JSON.parse(obj );    
+            var obj_html = "\"<table  border=\\\"1\\\"   style=\\\"font: 12pt arial, sans-serif; \\\"width:100%;      \\\"                   > <col width=\\\"700\\\"><col width=\\\"1500\\\"><col width=\\\"500\\\">";
+            var table_head ="<tr><td>Дата</td><td>Датчик</td><td>Значение</td></tr>";
+            obj_html=obj_html+table_head;
+             if (obj.length>0)
+            {
+            for(var i=0;i<obj.length;i++)
+            {
+                var tr="<tr>";
+                var tr2="</tr>";
+                var event_date = formatDate(new Date(obj[i]["ts"]), "JJJJ.MM.TT SS:mm:ss");
+                var td1="<td>"+event_date+"</td>";
+                var objn = getObject (obj[i]["name"],'name'); 
+                var id_name=objn.common.name;
+                id_name=id_name.replace('[BOOL]','')
+                var td2="<td>"+id_name+"</td>";
+                var value = '';
+                if (obj[i]["val"]==1)
+                   { value='Есть';}
+                if (obj[i]["val"]===0)
+                   { value='Нет';}
+                var td3="<td>"+value+"</td>";
+                obj_html = obj_html + tr+td1+td2+td3+tr2;
+            }
+            }
+            obj_html = obj_html +"</font></table>\"";
+            setState("html_table",obj_html);
+      
+    }
+});    
+    
+}
+
+function table_switches(period){
+sendTo('sql.0', 'query', 'SELECT id FROM iobroker.datapoints WHERE name="javascript.0.Security_status"  or name="javascript.0.vorota" or name="javascript.0.vorota_open" or name="beckhoff.0.plc.IOBROKER.LIGHT_GARDEN"  or  name="beckhoff.0.plc.IOBROKER.POMP_HOUSE" or name="beckhoff.0.plc.IOBROKER.POMP_GARDEN" or name="beckhoff.0.plc.IOBROKER.KALITKA" or name="beckhoff.0.plc.IOBROKER.VENT"', function (result) {
+    if (result.error) {
+        log(result.error);
+    } else {
+       
+        var now = new Date();
+        now.setMinutes(-period);
+        sendTo('sql.0', 'query', 'SELECT a.id,a.ts,a.val, b.name FROM iobroker.ts_bool as a INNER JOIN  iobroker.datapoints as b ON a.id = b.id WHERE ts >= ' + now.getTime() + ' AND a.id in (SELECT id FROM iobroker.datapoints WHERE  name="javascript.0.Security_status"  or name="javascript.0.vorota" or name="javascript.0.vorota_open" or name="beckhoff.0.plc.IOBROKER.LIGHT_GARDEN"  or  name="beckhoff.0.plc.IOBROKER.POMP_HOUSE" or name="beckhoff.0.plc.IOBROKER.POMP_GARDEN" or name="beckhoff.0.plc.IOBROKER.KALITKA" or name="beckhoff.0.plc.IOBROKER.VENT" ) order by a.ts desc' , function (result) {
+            //log('Rows: ' + JSON.stringify(result.result));
+            if (result.error) {
+                log(result.error);
+            } else {
+            var obj = JSON.stringify(result.result);
+            obj = JSON.parse(obj );    
+            var obj_html = "\"<table  border=\\\"1\\\"   style=\\\"font: 12pt arial, sans-serif;\\\"width:100%;\\\"> <col width=\\\"750\\\"><col width=\\\"1500\\\"> <col width=\\\"500\\\">";
+            var table_head ="<tr><td>Дата</td><td>Устройство</td><td>Значение</td></tr>";
+            obj_html=obj_html+table_head;
+            if (obj.length>0)
+            {
+            for(var i=0;i<obj.length;i++)
+            {
+                 var tr="<tr>";
+                var tr2="</tr>";
+                var myDate = new Date(obj[i]["ts"]+1000*60*60*5);
+                var event_date = formatDate(new Date(obj[i]["ts"]), "JJJJ.MM.TT SS:mm:ss");
+                var td1="<td>"+event_date+"</td>";
+                var objn = getObject (obj[i]["name"],'name'); 
+                var id_name=objn.common.name;
+                id_name=id_name.replace('[BOOL]','')
+                var td2="<td>"+id_name+"</td>";
+                var value = '';
+                if (obj[i]["val"]==1)
+                   { value='Вкл';}
+                if (obj[i]["val"]===0)
+                   { value='Откл';}
+                var td3="<td>"+value+"</td>";
+                obj_html = obj_html + tr+td1+td2+td3+tr2;
+            }
+            }
+            obj_html = obj_html +"</font></table>\"";
+            setState("html_table",obj_html);
+            }
+        });
+    }
+});    
+    
+}
+
+
+
+    
+
+
+   on({id: 'spisok_journal_period', change: 'any'}, function (objsp) {
+    
+    var period = objsp.state.val;
+    var type = getState("javascript.0.spisok_journal_type").val;
+    table_events(period);
+    if (type =='sensors')
+        table_sensors(period);
+    if (type =='security')
+        table_security(period);
+    
+    if (type =='switches')
+        table_switches(period); 
+       
+   });
+   
+   on({id: 'spisok_journal_type', change: 'any'}, function (objsp) {
+    var period = getState("javascript.0.spisok_journal_period").val;
+    var type = objsp.state.val;
+  
+    
+    if (type =='sensors')
+        table_sensors(period);
+    if (type =='security')
+        table_security(period);
+    if (type =='switches')
+        table_switches(period); 
+       
+   });
+   
+   on({id: 'vis.0.control.command', change: 'any'}, function (obj) {
+      if (obj.state.val == 'changedView' ) {
+         // log(getState('vis.0.control.data').val);  
+       if (getState('vis.0.control.data').val === 'main/journal')
+           {
+            log("journal is opened");
+            var period = getState("javascript.0.spisok_journal_period").val;
+            var type = getState("javascript.0.spisok_journal_type").val;
+            table_events(period);
+            if (type =='sensors')
+            table_sensors(period);
+            if (type =='security')
+            table_security(period);
+            
+            if (type =='switches')
+            table_switches(period); 
+            
+           }
+      }
+   });
+   
+   on({id: 'Delete_events', change: 'any'}, function (objsp) {
+    var period = getState("javascript.0.spisok_journal_period").val;
+    var type = getState("javascript.0.spisok_journal_type").val;
+     log("Start delete");
+       
+    if (type =='sensors')
+        delete_table_sensors(period);
+    if (type =='security')
+        delete_table_security(period);
+    
+    if (type =='switches')
+        delete_table_switches(period); 
+        
+    table_events(period);
+    if (type =='sensors')
+        table_sensors(period);
+    if (type =='security')
+        table_security(period);
+    if (type =='switches')
+        table_switches(period); 
+       
+   });
+   
+   
+
+    
+
+
+function delete_table_sensors(period) {
+   sendTo('sql.0', 'query', 'DELETE  FROM iobroker.ts_bool WHERE id in (SELECT id FROM iobroker.datapoints WHERE name="beckhoff.0.plc.IOBROKER.SENSOR_SUPPLY" or name="beckhoff.0.plc.IOBROKER.SMOKE") ', function (result) {
+    if (result.error) {
+        log(result.error);
+    } else {  
+    table_events(period);
+       
+    }
+    });
+ table_events(period);
+}
+function delete_table_switches(period) {
+   sendTo('sql.0', 'query', 'DELETE  FROM iobroker.ts_bool WHERE id in (SELECT id FROM iobroker.datapoints WHERE name="javascript.0.Security_status" or name="beckhoff.0.plc.IOBROKER.LIGHT_GARDEN"  or  name="beckhoff.0.plc.IOBROKER.POMP_HOUSE" or name="beckhoff.0.plc.IOBROKER.POMP_GARDEN" or name="beckhoff.0.plc.IOBROKER.KALITKA" or name="beckhoff.0.plc.IOBROKER.VENT") ', function (result) {
+    if (result.error) {
+        log(result.error);
+    } else {  
+    table_events(period);
+      
+    }
+    });
+ table_events(period);
+}
+
+
+function delete_table_security(period) {
+    log("Start delete part2");
+  sendTo('sql.0', 'query', 'DELETE  FROM iobroker.ts_string  WHERE id in (SELECT id FROM iobroker.datapoints WHERE name like "javascript.0.pir_%_hist" or name like "javascript.0.gerkon_%_hist")', function (result) {
+    if (result.error) {
+    log(result.error);
+    } else {  
+    table_events(period);
+    
+    }
+    });
+ table_events(period);
+    
+  glob("/home/iobroker/iobroker-data/files/vis.0/main/img/*_cam*.jpg",function(err,files){
+     if (err) throw err;
+     files.forEach(function(item,index,array){
+          log(item + " found");
+        });  
+     files.forEach(function(item,index,array){
+          fs.unlink(item, function(err){
+               if (err) throw err;
+               log(item + " deleted");
+        });
+    });
+   
+  });
+    glob("/home/iobroker/iobroker-data/files/vis.0/main/video/*_cam*.avi",function(err,files){
+     if (err) throw err;
+     files.forEach(function(item,index,array){
+          log(item + " found");
+        });  
+     files.forEach(function(item,index,array){
+          fs.unlink(item, function(err){
+               if (err) throw err;
+               log(item + " deleted");
+        });
+    });
+  });  
+  
+}
+
+
