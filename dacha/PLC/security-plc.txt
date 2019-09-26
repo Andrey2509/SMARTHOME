@@ -1,0 +1,103 @@
+PROGRAM Security
+VAR
+	TRIG_PIR_terrasa			:	F_TRIG;
+	TRIG_PIR_zapad			:	F_TRIG;
+	TRIG_PIR_vostok			:	F_TRIG;
+	TRIG_PIR_sport			:	F_TRIG;
+	TRIG_GERKON_drovnik	:	F_TRIG;
+	TRIG_sensor_smoke_1floor:	F_TRIG;
+
+	trig_mem_terrasa				:	BOOL:=FALSE;
+	trig_mem_zapad				:	BOOL:=FALSE;
+	trig_mem_vostok				:	BOOL:=FALSE;
+	trig_mem_sport				:	BOOL:=FALSE;
+	trig_mem_drovnik				:	BOOL:=FALSE;
+	trig_mem_sensor_smoke_1floor	:	BOOL:=FALSE;
+
+END_VAR
+
+
+
+
+
+(* Используем триггеры для исключения ложной информации о сработке датчиков при перезагрузке ПЛК *)
+
+
+TRIG_PIR_terrasa(CLK :=HW_PIR_terrasa);
+TRIG_PIR_zapad(CLK :=HW_PIR_zapad);
+TRIG_PIR_vostok(CLK :=HW_PIR_vostok);
+TRIG_PIR_sport(CLK :=HW_PIR_sport);
+TRIG_GERKON_drovnik(CLK :=HW_GERKON_drovnik);
+TRIG_sensor_smoke_1floor(CLK :=HW_sensor_smoke_1floor);
+
+
+IF (NOT TRIG_PIR_terrasa.Q) THEN
+iobroker.PIR_terrasa:=NOT TRIG_PIR_terrasa.Q;
+END_IF
+IF (trig_mem_terrasa=TRUE) THEN
+iobroker.PIR_terrasa:=FALSE;
+trig_mem_terrasa:=FALSE;
+END_IF
+IF (TRIG_PIR_terrasa.Q) THEN
+trig_mem_terrasa:=TRUE;
+END_IF
+
+
+
+IF (NOT TRIG_PIR_zapad.Q) THEN
+iobroker.PIR_zapad:=NOT TRIG_PIR_zapad.Q;
+END_IF
+IF (trig_mem_zapad=TRUE) THEN
+iobroker.PIR_zapad:=FALSE;
+trig_mem_zapad:=FALSE;
+END_IF
+IF (TRIG_PIR_zapad.Q) THEN
+trig_mem_zapad:=TRUE;
+END_IF
+
+
+IF (NOT TRIG_PIR_vostok.Q) THEN
+iobroker.PIR_vostok:=NOT TRIG_PIR_vostok.Q;
+END_IF
+IF (trig_mem_vostok=TRUE) THEN
+iobroker.PIR_vostok:=FALSE;
+trig_mem_vostok:=FALSE;
+END_IF
+IF (TRIG_PIR_vostok.Q) THEN
+trig_mem_vostok:=TRUE;
+END_IF
+
+
+IF (NOT TRIG_PIR_sport.Q) THEN
+iobroker.PIR_sport:=NOT TRIG_PIR_sport.Q;
+END_IF
+IF (trig_mem_sport=TRUE) THEN
+iobroker.PIR_sport:=FALSE;
+trig_mem_sport:=FALSE;
+END_IF
+IF (TRIG_PIR_sport.Q) THEN
+trig_mem_sport:=TRUE;
+END_IF
+
+IF (NOT TRIG_GERKON_drovnik.Q) THEN
+iobroker.GERKON_drovnik:=NOT TRIG_GERKON_drovnik.Q;
+END_IF
+IF (trig_mem_drovnik=TRUE) THEN
+iobroker.GERKON_drovnik:=FALSE;
+trig_mem_drovnik:=FALSE;
+END_IF
+IF (TRIG_GERKON_drovnik.Q) THEN
+trig_mem_drovnik:=TRUE;
+END_IF
+
+
+IF (NOT TRIG_sensor_smoke_1floor.Q) THEN
+iobroker.SMOKE:=NOT TRIG_sensor_smoke_1floor.Q;
+END_IF
+IF (trig_mem_sensor_smoke_1floor=TRUE) THEN
+iobroker.SMOKE:=FALSE;
+trig_mem_sensor_smoke_1floor:=FALSE;
+END_IF
+IF (TRIG_sensor_smoke_1floor.Q) THEN
+trig_mem_sensor_smoke_1floor:=TRUE;
+END_IF
