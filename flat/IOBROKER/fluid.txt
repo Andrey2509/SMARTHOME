@@ -1,0 +1,130 @@
+
+on({id: "beckhoff.0.plc.IOBROKER.FLD_PRC", change: "any"}, function (obj) {
+    var value = obj.state.val;
+    if (getState("javascript.0.Fluid_post").val != value)
+        {
+        setState("javascript.0.Fluid_post",value);
+        if ( getState("javascript.0.Fluid_post").val==1)
+                {
+                    var saytext = "Протечка воды в постирчной. Вода будет перекрыта";
+                    sendTo('telegram', {user: 'Andrey', text: saytext}, function (res) { });
+                    setState("javascript.0.Volume1",100);
+                    setStateDelayed("javascript.0.Volume2",100,300);
+                    setStateDelayed("sayit.1.tts.text",'ru;100;'+saytext,600); 
+                }
+                           
+        }
+});
+
+
+on({id: "beckhoff.0.plc.IOBROKER.FLD_BATH", change: "any"}, function (obj) {
+    var value = obj.state.val;
+    if (getState("javascript.0.Fluid_bathroom").val != value)
+        {
+        setState("javascript.0.Fluid_bathroom",value);
+        if ( getState("javascript.0.Fluid_bathroom").val==1)
+                {
+                    var saytext = "Протечка воды в ванной. Вода будет перекрыта";
+                    sendTo('telegram', {user: 'Andrey', text: saytext}, function (res) { });
+                    setState("javascript.0.Volume1",100);
+                    setStateDelayed("javascript.0.Volume2",100,300);
+                    setStateDelayed("sayit.1.tts.text",'ru;100;'+saytext,600); 
+                }
+               
+        }
+});
+
+on({id: "beckhoff.0.plc.IOBROKER.FLD_TLT", change: "any"}, function (obj) {
+    var value = obj.state.val;
+    if (getState("javascript.0.Fluid_tlt").val != value)
+        {
+        setState("javascript.0.Fluid_tlt",value);
+        if ( getState("javascript.0.Fluid_tlt").val==1)
+                {
+                    var saytext = "Протечка воды в туалете. Вода будет перекрыта";
+                    sendTo('telegram', {user: 'Andrey', text: saytext}, function (res) { });
+                    setState("javascript.0.Volume1",100);
+                    setStateDelayed("javascript.0.Volume2",100,300);
+                    setStateDelayed("sayit.1.tts.text",'ru;100;'+saytext,600); 
+                }
+                    
+        }
+});
+
+on({id: "beckhoff.0.plc.IOBROKER.FLD_KUH", change: "any"}, function (obj) {
+    var value = obj.state.val;
+    if (getState("javascript.0.Fluid_kitchen").val != value)
+        {
+        setState("javascript.0.Fluid_kitchen",value);
+        if ( getState("javascript.0.Fluid_kitchen").val==1)
+                {
+                    var saytext = "Протечка воды на кухне. Вода будет перекрыта";
+                    sendTo('telegram', {user: 'Andrey', text: saytext}, function (res) { });
+                    setState("javascript.0.Volume1",100);
+                    setStateDelayed("javascript.0.Volume2",100,300);
+                    setStateDelayed("sayit.1.tts.text",'ru;100;'+saytext,600); 
+                }
+             
+        }
+});
+
+
+createState("html_fluid_protect_table");
+
+on({id: /beckhoff.0.plc.IOBROKER.FLD/, change: "ne"}, function (obj) {
+
+    var css="<STYLE TYPE=\\\"text/css\\\"> TD{font-family: Arial; font-size: 11pt;} </STYLE>";
+    var obj_html = "\" <table  border='2' style='width:100%; font: 11pt arial' > <col width=80><col width=60><col width=200> ";
+    var table_head ="<tr><td><b>Датчик</b></td><td><b>Статус</b></td><td><b>Время последней сработки</b></td></tr>";
+    obj_html=obj_html+table_head;
+
+    var tr="<tr>";
+    var tr2="</tr>";
+    var td2='<td><a> Ванная </a></td>';
+    var status;
+    if (getState("beckhoff.0.plc.IOBROKER.FLD_BATH").val == true)
+        status='<font color=red>Протечка!</font>';
+    else
+        status='<font color=green>Ok</font>';
+    var td3="<td>"+status+"</td>";
+    var event_date = formatDate(getState("javascript.0.Fluid_bathroom").lc, "JJJJ.MM.TT SS:mm:ss");
+    var td4="<td><font color=blue>"+event_date+"</font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+tr2;
+
+    if (getState("beckhoff.0.plc.IOBROKER.FLD_PRC").val == true)
+        status='<font color=red>Протечка!</font>';
+    else
+        status='<font color=green>Ok</font>';
+    var td2='<td><a> Постирочная </a></td>';
+    var td3="<td><font color=red>"+status+"</font></td>";
+    var event_date = formatDate(getState("javascript.0.Fluid_post").lc, "JJJJ.MM.TT SS:mm:ss");
+    var td4="<td><font color=blue>"+event_date+"</font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+tr2;
+
+    if (getState("beckhoff.0.plc.IOBROKER.FLD_TLT").val == true)
+        status='<font color=red>Протечка!</font>';
+    else
+        status='<font color=green>Ok</font>';
+    var td2='<td><a> Туалет </a></td>';
+    var td3="<td><font color=red>"+status+"</font></td>";
+    var event_date = formatDate(getState("javascript.0.Fluid_tlt").lc, "JJJJ.MM.TT SS:mm:ss");
+    var td4="<td><font color=blue>"+event_date+"</font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+tr2;
+
+    if (getState("beckhoff.0.plc.IOBROKER.FLD_KUH").val == true)
+        status='<font color=red>Протечка!</font>';
+    else
+        status='<font color=green>Ok</font>';
+    var td2='<td><a> Кухня </a></td>';
+    var td3="<td><font color=red>"+status+"</font></td>";
+    var event_date = formatDate(getState("javascript.0.Fluid_kitchen").lc, "JJJJ.MM.TT SS:mm:ss");
+    var td4="<td><font color=blue>"+event_date+"</font></td>";
+    obj_html = obj_html + tr+td2+td3+td4+tr2;
+
+
+    obj_html = obj_html +"</table>\"";
+    setState("html_fluid_protect_table",obj_html);
+
+
+});
+
