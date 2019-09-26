@@ -1,0 +1,32 @@
+createState('полив_запад_on');
+createState('полив_запад_off');
+createState('spisok_poliv_zapad');
+
+on({id: 'полив_запад', change: 'ne'}, function (obj) {
+    
+    if (obj.state.val == true) {
+        var d2 = formatDate(new Date(), "DD-MM-YYYY SS:mm:ss");
+        setState('полив_запад_on',d2);
+        log('Старт_полив_запад');
+        log('Время полива='+getState("javascript.0.spisok_poliv_zapad").val);
+        setState('beckhoff.0.plc.IOBROKER.POLIV_ZAPAD',true);
+        var poliv_m = getState("javascript.0.spisok_poliv_zapad").val*60;
+        setState('beckhoff.0.plc.IOBROKER.POLIV_ZAPAD_MINUTES',poliv_m);
+    }
+
+    if (obj.state.val == false) {
+        var d3 = formatDate(new Date(), "DD-MM-YYYY SS:mm:ss");
+        setState('полив_запад_off',d3);
+        setState('beckhoff.0.plc.IOBROKER.POLIV_ZAPAD',false);
+     
+    }
+});
+
+
+on({id: 'beckhoff.0.plc.IOBROKER.POLIV_ZAPAD', change: 'ne'}, function (obj) {
+    if (obj.state.val === false) {
+        setState('полив_запад',false);
+        var d3 = formatDate(new Date(), "DD-MM-YYYY SS:mm:ss");
+        setState('полив_запад_off',d3);
+    }
+});
