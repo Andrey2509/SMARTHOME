@@ -1,0 +1,41 @@
+var event_date, camera1_snap, cmd_get_snap1, camera1_snap_small, sensor_count, camera1_video, cmd_get_camera1_video;
+
+on({id: "beckhoff.0.plc.IOBROKER.PIR_TERRASA", change: "ne"}, function (obj) {
+  if ((obj.state.val == false) &&
+    (getState("javascript.0.Security_status").val == true) &&
+    (getState("javascript.0.Pir_func_cam1_img").val == false) &&
+    (getState("javascript.0.Sensor_pir_terrasa_count").val < 50)) {
+        event_date = formatDate(new Date(), "TT_MM_JJJJ_SS_mm_ss_sss");
+        camera1_snap = '/home/iobroker/iobroker-data/files/vis.0/main/img/' + String(String(event_date) + '_cam1.jpg');
+        cmd_get_snap1 = 'wget http://XXX:XXX@192.168.2.30/Streaming/channels/1/picture -O ' + String(camera1_snap);
+        camera1_snap_small = '/home/iobroker/iobroker-data/files/vis.0/main/img/' + String(String(event_date) + '_cam1_small.jpg');
+        send_email_image(cmd_get_snap1,camera1_snap,camera1_snap_small,"javascript.0.Pir_func_cam1_img","Pir_terrasa");
+        log("exec: " + cmd_get_snap1);
+        sensor_count = getState("javascript.0.Sensor_pir_terrasa_count").val;
+        sensor_count = (typeof sensor_count == 'number' ? sensor_count : 0) + 1;
+        setState("javascript.0.Sensor_pir_terrasa_count", sensor_count);
+        setState("javascript.0.pir_terrasa_image_hist",camera1_snap);
+          // Video part
+        if (!getState("javascript.0.Pir_func_cam1_video").val) {
+            camera1_video = '/home/iobroker/iobroker-data/files/vis.0/main/video/' + String(String(event_date) + '_cam1.avi');
+            cmd_get_camera1_video = ' /usr/local/bin/ffmpeg -t 30 -thread_queue_size 5120 -r 20 -i rtsp://XXX:XXX@192.168.2.30:554/Streaming/Channels/1?tcp -thread_queue_size 5120 -f alsa -t 30 -i snoop1  -map 0 -map 1  -vcodec copy -acodec libfdk_aac -ab 24k -ar 22050 -y  ' + String(camera1_video);
+            send_email_video(cmd_get_camera1_video,camera1_video,"javascript.0.Pir_func_cam1_video","Pir_terrasa");
+            log("exec: " + cmd_get_camera1_video);
+            setState("javascript.0.pir_terrasa_video_hist",camera1_video);
+           
+          } 
+          // Sound part
+          if (!getState("javascript.0.Sound_is_playing").val) {
+            setState("javascript.0.Sound_is_playing", true);
+            exec('/usr/bin/mpg123 /var/www/sound/zvuk_iz_half_life_2_-_vnimanie_neopoznannoe_lico_mp3davalka.com.mp3', function (error, result, stderr) {
+                if ((function (){var val = (stderr.indexOf(' finished.')+1); if (val >0) return true; if (val == 0) return false; return !!val;})()) {
+                setState("javascript.0.Sound_is_playing", false);
+              }
+            });
+            log("exec: " + '/usr/bin/mpg123 /var/www/sound/zvuk_iz_half_life_2_-_vnimanie_neopoznannoe_lico_mp3davalka.com.mp3');
+            setStateDelayed("javascript.0.Sound_is_playing", false, 7000, false);
+          }
+        
+    }
+});
+
