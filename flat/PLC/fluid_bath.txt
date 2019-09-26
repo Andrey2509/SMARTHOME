@@ -1,0 +1,43 @@
+PROGRAM Fluid_bath
+VAR
+BUTTON3 : R_TRIG; (* Конпка №3 - переключение подачи воды в санузлах *)
+END_VAR
+
+
+
+
+
+iobroker.FLD_BATH:=HW_sensor_fld_van;
+iobroker.FLD_PRC:=HW_sensor_fld_post;
+iobroker.FLD_TLT:=HW_sensor_fld_tlt;
+
+
+IF (iobroker.FLD_BATH=TRUE OR iobroker.FLD_PRC=TRUE OR iobroker.FLD_TLT=TRUE ) THEN
+	HW_valve_water_bathroom:=FALSE;
+	iobroker.FLD_valve_bathroom:=FALSE;
+	iobroker.FLD_ALRM_BATH:=TRUE;
+ELSE
+	IF (iobroker.FLD_ALRM_BATH=FALSE) THEN
+		HW_valve_water_bathroom:=TRUE;
+		iobroker.FLD_valve_bathroom:=TRUE;
+	ELSE
+		HW_valve_water_bathroom:=FALSE;
+		iobroker.FLD_valve_bathroom:=FALSE;
+	END_IF
+END_IF
+
+BUTTON3 (CLK:=HW_IN03);
+
+IF (     BUTTON3.Q ) THEN
+	IF (iobroker.FLD_valve_bathroom=FALSE) THEN
+		IF (iobroker.FLD_BATH=FALSE AND iobroker.FLD_PRC=FALSE AND iobroker.FLD_TLT=FALSE) THEN
+			HW_valve_water_bathroom:=TRUE;
+			iobroker.FLD_valve_bathroom:=TRUE;
+			iobroker.FLD_ALRM_BATH:=FALSE;
+		END_IF
+	ELSE
+		iobroker.FLD_ALRM_BATH:=TRUE;
+		HW_valve_water_bathroom:=FALSE;
+		iobroker.FLD_valve_bathroom:=FALSE;
+	END_IF
+END_IF
