@@ -1,0 +1,93 @@
+PROGRAM Poliv
+VAR
+Period_pomp_garden_delay : INT:=15; (* Задержка включения насоса после сигнала на открытие клапана=15 сек. *)
+
+tTimerValue_zapad : TIME;
+Timer_poliv_zapad : TON;
+Timer_poliv_zapadQ : BOOL;
+
+tTimerValue_terrasa : TIME;
+Timer_poliv_terrasa : TON;
+Timer_poliv_terrasaQ : BOOL;
+
+tTimerValue_south : TIME;
+Timer_poliv_south : TON;
+Timer_poliv_southQ : BOOL;
+
+TON_pomp_garden : TON ;
+pomp_garden_start : BOOL;
+
+tTimerValue : TIME;
+END_VAR
+
+
+
+
+tTimerValue := DINT_TO_TIME(Period_pomp_garden_delay*1000);
+
+
+Timer_poliv_zapad();
+Timer_poliv_terrasa();
+Timer_poliv_south();
+
+IF (iobroker.Poliv_zapad = TRUE ) THEN
+	tTimerValue_zapad := DINT_TO_TIME(iobroker.Poliv_zapad_minutes*60*1000);
+	HW_poliv_zapad	:=	TRUE;
+	Timer_poliv_zapad(IN:=NOT Timer_poliv_zapadQ , PT:=tTimerValue_zapad , Q=>Timer_poliv_zapadQ , ET=> );
+END_IF
+IF (iobroker.Poliv_zapad = FALSE ) THEN
+	HW_poliv_zapad	:=	FALSE;
+	Timer_poliv_zapadQ := FALSE;
+	Timer_poliv_zapad(IN:=FALSE , PT:=T#0ms , Q=>Timer_poliv_zapadQ , ET=> );
+END_IF
+IF Timer_poliv_zapad.q THEN
+	iobroker.Poliv_zapad := FALSE;
+	HW_poliv_zapad	:=	FALSE;
+END_IF
+
+
+IF (iobroker.Poliv_terrasa = TRUE ) THEN
+	tTimerValue_terrasa := DINT_TO_TIME(iobroker.Poliv_terrasa_minutes*60*1000);
+	HW_poliv_terrasa	:=	TRUE;
+	Timer_poliv_terrasa(IN:=NOT Timer_poliv_terrasaQ , PT:=tTimerValue_terrasa , Q=>Timer_poliv_terrasaQ , ET=> );
+END_IF
+IF (iobroker.Poliv_terrasa = FALSE ) THEN
+	HW_poliv_terrasa	:=	FALSE;
+	Timer_poliv_terrasaQ := FALSE;
+	Timer_poliv_terrasa(IN:=FALSE , PT:=T#0ms , Q=>Timer_poliv_terrasaQ , ET=> );
+END_IF
+IF Timer_poliv_terrasa.q THEN
+	iobroker.Poliv_terrasa := FALSE;
+	HW_poliv_zapad	:=	FALSE;
+END_IF
+
+IF (iobroker.Poliv_south = TRUE ) THEN
+	tTimerValue_south := DINT_TO_TIME(iobroker.Poliv_south_minutes*60*1000);
+	HW_poliv_south	:=	TRUE;
+	Timer_poliv_south(IN:=NOT Timer_poliv_southQ , PT:=tTimerValue_south , Q=>Timer_poliv_southQ , ET=> );
+END_IF
+IF (iobroker.Poliv_south = FALSE ) THEN
+	HW_poliv_south	:=	FALSE;
+	Timer_poliv_southQ := FALSE;
+	Timer_poliv_south(IN:=FALSE , PT:=T#0ms , Q=>Timer_poliv_southQ , ET=> );
+END_IF
+IF Timer_poliv_south.q THEN
+	iobroker.Poliv_south := FALSE;
+	HW_poliv_south	:=	FALSE;
+END_IF
+
+IF ((HW_poliv_zapad=TRUE OR HW_poliv_terrasa=TRUE 	OR HW_poliv_south =	TRUE) AND (HW_pomp_Garden=FALSE)  )  THEN
+	pomp_garden_start			:=TRUE;
+END_IF
+
+
+TON_pomp_garden(IN := pomp_garden_start, PT:= tTimerValue);
+iobroker.Pomp_garden	 	:= TON_pomp_garden.Q;
+HW_Pomp_garden		:= TON_pomp_garden.Q;
+
+IF ((HW_poliv_zapad=FALSE AND HW_poliv_terrasa=FALSE 	AND HW_poliv_south = FALSE))   THEN
+	pomp_garden_start		:= FALSE;
+	iobroker.Pomp_garden	 	:= FALSE;
+	HW_Pomp_garden		:= FALSE;
+END_IF
+
