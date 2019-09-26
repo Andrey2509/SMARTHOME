@@ -1,0 +1,37 @@
+        
+on({id: 'ical.0.events.0.now.Полив_запад', change: 'ne'}, function (obj) {
+    log('Событие по календарю Полив_запад')
+    if (obj.state.val === true) {
+        log('Старт полив по календарю Полив_запад');
+        setState('javascript.0.полив_запад',true);
+    }
+
+    if (obj.state.val === false) {
+       log('Стоп полив по календарю Полив_запад'); 
+      setState('javascript.0.полив_запад',false);
+    }
+});
+
+on({id: 'ical.0.events.0.now.Полив_юг', change: 'ne'}, function (obj) {
+    
+    if (obj.state.val == true) {
+        setState('javascript.0.полив_юг',true);
+    }
+
+    if (obj.state.val == false) {
+       
+      setState('javascript.0.полив_юг',false);
+    }
+});
+
+on({id: 'ical.0.events.0.now.Полив_терраса', change: 'ne'}, function (obj) {
+    
+    if (obj.state.val == true) {
+        setState('javascript.0.полив_терраса',true);
+    }
+
+    if (obj.state.val == false) {
+       
+      setState('javascript.0.полив_терраса',false);
+    }
+});
