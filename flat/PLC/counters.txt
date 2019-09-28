@@ -1,0 +1,39 @@
+PROGRAM Counters
+VAR
+
+	Trigger_bathroom_water_warm: F_TRIG;
+	Trigger_bathroom_water_cold: F_TRIG;
+	Trigger_kitchen_water_warm: F_TRIG;
+	Trigger_kitchen_water_cold: F_TRIG;
+
+END_VAR
+
+
+
+
+
+
+Trigger_bathroom_water_warm(CLK :=HW_impulse_bathroom_water_warm);
+Trigger_bathroom_water_cold(CLK :=HW_impulse_bathroom_water_cold);
+Trigger_kitchen_water_warm(CLK :=HW_impulse_kitchen_water_warm);
+Trigger_kitchen_water_cold(CLK :=HW_impulse_kitchen_water_cold);
+
+IF (Trigger_bathroom_water_warm.Q) THEN
+	iobroker.Bathroom_stat_warm_water:=iobroker.Bathroom_stat_warm_water+1;
+	Bathroom_stat_warm_water_mem:=iobroker.Bathroom_stat_warm_water;
+END_IF
+
+IF (Trigger_bathroom_water_cold.Q) THEN
+	iobroker.Bathroom_stat_cold_water:=iobroker.Bathroom_stat_cold_water+1;
+	Bathroom_stat_cold_water_mem:=iobroker.Bathroom_stat_cold_water;
+END_IF
+
+IF (Trigger_kitchen_water_warm.Q) THEN
+	iobroker.Kitchen_stat_warm_water:=iobroker.Kitchen_stat_warm_water+1;
+	Kitchen_stat_warm_water_mem:=iobroker.Kitchen_stat_warm_water;
+END_IF
+
+IF (Trigger_kitchen_water_cold.Q) THEN
+	iobroker.Kitchen_stat_cold_water:=iobroker.Kitchen_stat_cold_water+1;
+	Kitchen_stat_cold_water_mem:=iobroker.Kitchen_stat_cold_water;
+END_IF
