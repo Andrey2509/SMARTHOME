@@ -1,0 +1,83 @@
+PROGRAM Thermocontrol
+VAR
+period_sec : INT:=120; (* Частота работы термостата, секунды*)
+gisterezis : REAL:=0.2; (*Гистерезис термостата, градусы цельсия *)
+Timer1 : TON;
+Timer1Q : BOOL;
+state : INT:=0;
+tTimerValue : TIME;
+END_VAR
+
+
+
+tTimerValue := DINT_TO_TIME(period_sec*1000);
+
+CASE state OF
+0:
+	IF (iobroker.First_floor_temp > iobroker.First_floor_temp_target+gisterezis ) THEN
+		HW_heat_first_floor:=FALSE;
+	END_IF
+
+	IF (iobroker.First_floor_temp <  iobroker.First_floor_temp_target-gisterezis ) THEN
+		HW_heat_first_floor:=TRUE;
+	END_IF
+
+	state:=1;
+
+1:
+	IF (iobroker.Second_floor_temp > iobroker.Second_floor_temp_target+gisterezis ) THEN
+		HW_heat_Second_floor:=FALSE;
+	END_IF
+
+	IF (iobroker.Second_floor_temp <  iobroker.Second_floor_temp_target-gisterezis ) THEN
+		HW_heat_Second_floor:=TRUE;
+	END_IF
+
+	state:=2;
+2:
+	IF (iobroker.Sport_temp > iobroker.Sport_temp_target+gisterezis ) THEN
+		HW_heat_sport:=FALSE;
+	END_IF
+
+	IF (iobroker.Sport_temp <  iobroker.Sport_temp_target-gisterezis ) THEN
+		HW_heat_sport:=TRUE;
+	END_IF
+
+	state:=3;
+
+3:
+	IF (iobroker.Sauna_temp > iobroker.Sauna_temp_target+gisterezis ) THEN
+		HW_heat_Sauna:=FALSE;
+	END_IF
+
+	IF (iobroker.Sauna_temp <  iobroker.Sauna_temp_target-gisterezis ) THEN
+		HW_heat_Sauna:=TRUE;
+	END_IF
+
+	state:=4;
+
+4:
+	IF (iobroker.Underfloor_temp > iobroker.Underfloor_temp_target+gisterezis AND iobroker.Underfloor_humidity < iobroker.Underfloor_humidity_target-1 ) THEN
+		HW_heat_underfloor:=FALSE;
+	END_IF
+
+	IF (iobroker.Underfloor_temp <  iobroker.Underfloor_temp_target-gisterezis OR iobroker.Underfloor_humidity > iobroker.Underfloor_humidity_target+1) THEN
+		HW_heat_Underfloor:=TRUE;
+	END_IF
+
+	state:=100;
+
+
+
+100:
+
+
+	Timer1(IN:=NOT Timer1Q , PT:=tTimerValue , Q=>Timer1Q , ET=> );
+		IF timer1.q THEN
+
+		state:=0;
+		END_IF
+
+
+
+END_CASE
