@@ -1,0 +1,95 @@
+ 
+
+createState("html_electro_status_table");
+
+on({id: /javascript.0.Uv*/, change: "any"}, function (obj) {
+
+
+
+var css="<STYLE TYPE=\\\"text/css\\\"> TD{font-family: Arial; font-size: 11pt;} </STYLE>";
+var obj_html = "\" <table  border='2' style='width:100%; font: 11pt arial;text-align:center' > <col width=150><col width=70><col width=70><col width=70>  ";
+var table_head ="<tr><td><b></b></td><td><b>Фаза 1</b></td><td><b>Фаза 2</b></td><td><b>Фаза 3</b></td></tr>";
+obj_html = obj_html + table_head;
+
+var tr="<tr>";
+var tr2="</tr>";
+var td2='<td ><a>Напряжение, В</a></td>';
+var td3="<td><font color=red>"+getState('javascript.0.Uv1'/*Uv1*/).val.toFixed(1)+"</font></td>";
+var td4="<td><font color=green>"+getState('javascript.0.Uv2'/*Uv2*/).val.toFixed(1)+"</font></td>";
+var td5="<td><font color=blue>"+getState('javascript.0.Uv3'/*Uv3*/).val.toFixed(1)+"</font></td>";
+obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+var tr="<tr>";
+var tr2="</tr>";
+var td2='<td><a>Ток, А</a></td>';
+var td3="<td><font color=red>"+getState('javascript.0.Ia1').val.toFixed(1)+"</font></td>";
+var td4="<td><font color=green>"+getState('javascript.0.Ia2').val.toFixed(1)+"</font></td>";
+var td5="<td><font color=blue>"+getState('javascript.0.Ia3').val.toFixed(1)+"</font></td>";
+obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+var tr="<tr>";
+var tr2="</tr>";
+var td2='<td><a>Мощность, Ватт</a></td>';
+var td3="<td><font color=red>"+getState('javascript.0.Pw1').val.toFixed(1)+"</font></td>";
+var td4="<td><font color=green>"+getState('javascript.0.Pw2').val.toFixed(1)+"</font></td>";
+var td5="<td><font color=blue>"+getState('javascript.0.Pw3').val.toFixed(1)+"</font></td>";
+obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+ 
+var tr="<tr>";
+var tr2="</tr>";
+var td2='<td><a>Потребление T1, квт*ч</a></td>';
+var td3="<td colspan=\\\"3\\\"><span style=\\\"font-weight:bold\\\"><font color=black>"+getState('javascript.0.E_T1').val.toFixed(0)+"</font></span></td>";
+
+obj_html = obj_html + tr+td2+td3+tr2;
+
+var tr="<tr>";
+var tr2="</tr>";
+var td2='<td><a>Потребление T2, квт*ч</a></td>';
+var td3="<td colspan=\\\"3\\\"><span style=\\\"font-weight:bold\\\"><font color=black>"+getState('javascript.0.E_T2').val.toFixed(0)+"</font></span></td>";
+
+
+obj_html = obj_html + tr+td2+td3+tr2;
+
+obj_html = obj_html +"</table>\"" ;
+
+
+setState("html_electro_status_table",obj_html);
+});
+
+
+/////////////////////////////////////////////////////////////
+
+on({id: /javascript.0.Energy_tarif|modbus.0.holdingRegisters.12*/, change: 'any'}  , function (obj) {
+    var tarrif=getState("javascript.0.Energy_tarif").val;
+   
+  var table_mer230 = [{"month":1,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":2,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":3,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":4,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":5,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":6,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":7,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":8,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":9,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":10,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":11,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":12,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0}];  
+    for(var i=1;i<13;i++)
+    {
+       
+    table_mer230[i-1]["month"]=i;
+    var num_reg=12284+i*4; 
+    var num_reg2=12286+i*4;
+    
+    table_mer230[i-1]["T1"]=getState('modbus.0.holdingRegisters.'+num_reg+'_M'+i+'T1').val;
+    table_mer230[i-1]["T2"]=getState('modbus.0.holdingRegisters.'+num_reg2+'_M'+i+'T2').val;
+    table_mer230[i-1]["T1_potr"]=Math.round( table_mer230[i-1]["T1"]*tarrif); 
+    table_mer230[i-1]["T2_potr"]=Math.round(table_mer230[i-1]["T2"]*tarrif/2);
+    table_mer230[i-1]["Total"]=table_mer230[i-1]["T1_potr"]+table_mer230[i-1]["T2_potr"];
+  
+     } 
+    //log('table='+JSON.stringify(table_mer230));
+    setState("javascript.0.History_mer230", JSON.stringify(table_mer230));
+      
+   });
+
