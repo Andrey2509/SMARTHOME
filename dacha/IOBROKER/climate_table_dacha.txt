@@ -1,0 +1,66 @@
+
+
+createState("html_table2");
+on({id: /beckhoff.0.plc.IOBROKER.*/, change: "any"}, function (obj) {
+    
+var css="<STYLE TYPE=\\\"text/css\\\"> TD{font-family: Arial; font-size: 11pt;} </STYLE>";
+var obj_html = "\" <table  border='2' style='width:100%; font: 11pt arial' > <col width=300><col width=200><col width=200><col width=100>  ";
+var table_head ="<tr><td><b></b></td><td><b>Темп.</b></td><td><b>Влажность</b></td><td><b>CO2</b></td></tr>";
+obj_html=obj_html+table_head;
+
+var tr="<tr>";
+var tr2="</tr>";
+var td2='<td><a> 1 этаж </a></td>';
+var td3="<td><font color=red>"+getState('javascript.0.Temperature_1floor'/*javascript 0 Temperature 1floor*/).val.toFixed(1)+"</font></td>";
+var td4="<td><font color=blue>"+getState("beckhoff.0.plc.IOBROKER.KITCHEN_ROOM_HUM"/*KITCHEN_ROOM_HUM [REAL]*/).val.toFixed(1)+"</font></td>";
+var td5="<td><font color=green>"+getState('javascript.0.CO2_1_floor'/*CO2 1 floor*/).val+"</font></td>";
+obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+td2='<td><a> 2 этаж </a></td>';
+td3="<td><font color=red>"+getState('javascript.0.Temperature_2floor'/*javascript 0 Temperature 2floor*/).val.toFixed(1)+"</font></td>";
+td4="<td><font color=blue>"+getState("beckhoff.0.plc.IOBROKER.KITCHEN_ROOM_HUM"/*BED_ROOM_HUM [REAL]*/).val.toFixed(1)+"</font></td>";
+td5="<td><font color=green>"+getState('javascript.0.CO2_2_floor'/*CO2 2 floor*/).val+"</font></td>";
+obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+td2='<td><a> Спорт </a></td>';
+td3="<td><font color=red>"+getState('javascript.0.Temperature_sport').val.toFixed(1)+"</font></td>";
+td4="<td><font color=blue>"+"n/d"+"</font></td>";
+td5="<td><font color=green>"+"n/d"+"</font></td>";
+obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+td2='<td><a> Сауна </a></td>';
+td3="<td><font color=red>"+getState('javascript.0.Temperature_sauna').val.toFixed(1)+"</font></td>";
+td4="<td><font color=blue>"+"n/d"+"</font></td>";
+td5="<td><font color=green>"+"n/d"+"</font></td>";
+obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+td2='<td><a> Подпол </a></td>';
+td3="<td><font color=red>"+getState('javascript.0.Temperature_underfloor').val.toFixed(1)+"/"+getState('mqtt.0.ESP_Easy_inbox_n1.Sensor_AM2303_underfloor.Temperature').val.toFixed(1)+"</font></td>";
+td4="<td><font color=blue>"+getState('javascript.0.Humidity_underfloor').val.toFixed(1)+"</font></td>";
+td5="<td><font color=green>"+"n/d"+"</font></td>";
+obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+td2='<td><a> Подполспорт </a></td>';
+td3="<td><font color=red>"+getState('mqtt.0.Sonoff1.Hum_sport_undefloor.Temperature').val.toFixed(1)+"</font></td>";
+td4="<td><font color=blue>"+getState('mqtt.0.Sonoff1.Hum_sport_undefloor.Humidity').val.toFixed(1)+"</font></td>";
+td5="<td><font color=green>"+"n/d"+"</font></td>";
+obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+
+td2='<td><a> Балкон </a></td>';
+td3="<td><font color=red>"+getState('javascript.0.Temperature_balkon').val.toFixed(1)+"</font></td>";
+td4="<td><font color=blue>"+"n/d"+"</font></td>";
+td5="<td><font color=green>"+"n/d"+"</font></td>";
+obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+td2='<td><a> Улица </a></td>';
+td3="<td><font color=red>"+getState('javascript.0.Temperature_street').val.toFixed(1)+"</font></td>";
+td4="<td><font color=blue>"+getState('javascript.0.Humidity_street').val.toFixed(1)+"/"+getState('mqtt.0.ESP_Easy_inbox_n1.Sensor_AM2303_street.Humidity').val.toFixed(1)+"</font></td>";
+td5="<td><font color=green>"+"n/d"+"</font></td>";
+obj_html = obj_html + tr+td2+td3+td4+td5+tr2;
+
+
+obj_html = obj_html +"</table>\"";
+
+setState("html_table2",obj_html);
+});
