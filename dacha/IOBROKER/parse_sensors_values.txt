@@ -1,0 +1,254 @@
+on({id: 'beckhoff.0.plc.IOBROKER.KITCHEN_ROOM_TEMP', change: 'any'}, function (obj) {
+       {
+           if (obj.state.val != 0 && obj.state.val != 850)
+            {
+             setState('javascript.0.Temperature_kitchen',obj.state.val);
+            }
+       }
+});
+
+
+on({id: 'beckhoff.0.plc.IOBROKER.KITCHEN_ROOM_HUM', change: 'any'}, function (obj) {
+       {
+           if (obj.state.val != 0 && obj.state.val != 850)
+            {
+             setState('javascript.0.Humidity_kitchen',obj.state.val);
+            }
+       }
+});
+
+
+
+on({id: 'beckhoff.0.plc.IOBROKER.FIRST_FLOOR_TEMP', change: 'any'}, function (obj) {
+       {
+           if (obj.state.val != 0 && obj.state.val != 850)
+            {
+             setState('javascript.0.Temperature_1floor'/*javascript 0 Temperature 1floor*/,obj.state.val);
+            }
+       }
+});
+on({id: 'beckhoff.0.plc.IOBROKER.SECOND_FLOOR_TEMP', change: 'any'}, function (obj) {
+       {
+        if (obj.state.val != 0 && obj.state.val != 850)
+            {   
+         setState('javascript.0.Temperature_2floor'/*javascript 0 Temperature 2floor*/,obj.state.val);
+            }
+       }
+});
+on({id: 'beckhoff.0.plc.IOBROKER.SPORT_TEMP', change: 'any'}, function (obj) {
+       {
+        if (obj.state.val != 0 && obj.state.val != 850)
+            {   
+         setState('javascript.0.Temperature_sport'/*javascript 0 Temperature sport*/,obj.state.val);
+            }
+       }
+});
+on({id: 'owfs.0.wires.Сауна'/*Сауна*/, change: 'any'}, function (obj) {
+       {
+       if (obj.state.val != 0 && obj.state.val != 85 && obj.state.val != obj.oldState.val)
+            {    
+         setState('javascript.0.Temperature_sauna'/*javascript 0 Temperature sauna*/,obj.state.val);
+         setState('beckhoff.0.plc.IOBROKER.SAUNA_TEMP',{val:obj.state.val, ack:false});
+         
+            }
+       }
+});
+on({id: 'owfs.0.wires.Подвал'/*Подвал*/, change: 'any'}, function (obj) {
+       {
+       if (obj.state.val != 0 && obj.state.val != 85 && obj.state.val != obj.oldState.val)
+            {   
+                setState('javascript.0.Temperature_underfloor',obj.state.val);
+                setState('beckhoff.0.plc.IOBROKER.UNDERFLOOR_TEMP',{val:obj.state.val, ack:false});
+            }
+       }
+});
+
+
+
+
+on({id: 'mqtt.0.ESP_Easy_inbox_n1.Sensor_AM2303_underfloor.Humidity'/*/ESP Easy inbox n1/Sensor AM2303 underfloor/Humidity*/, change: 'any'}, function (obj) {
+       {
+       if (obj.state.val != 0 && obj.state.val != 85 && obj.state.val != getState('javascript.0.Humidity_underfloor').val)
+            {   
+                setState('javascript.0.Humidity_underfloor'/*Humidity underfloor*/,obj.state.val);
+                setState('beckhoff.0.plc.IOBROKER.UNDERFLOOR_HUMIDITY',{val:obj.state.val, ack:false});
+            }
+       }
+});
+
+on({id: 'mqtt.0.ESP_Easy_inbox_n2.Bme280_street.Humidity'/*/ESP Easy inbox n2/Bme280 street/Humidity*/, change: 'any'}, function (obj) {
+       {
+       if (obj.state.val != 0 && obj.state.val != 85 )
+            {   
+                setState('javascript.0.Humidity_street',obj.state.val);
+              }
+       }
+});
+
+
+
+on({id: 'owfs.0.wires.Балкон'/*Подвал*/, change: 'any'}, function (obj) {
+       {
+       if (obj.state.val != 0 && obj.state.val != 85)
+            {   
+                setState('javascript.0.Temperature_balkon',obj.state.val);
+            
+            }
+       }
+});
+on({id: 'beckhoff.0.plc.IOBROKER.STREET_TEMP', change: 'any'}, function (obj) {
+       {
+        if (obj.state.val != 0 && obj.state.val != 850 && obj.state.val < 50 && obj.state.val > -60)
+        {
+         setState("javascript.0.Temperature_street",obj.state.val);
+        }
+       }
+});
+
+on({id: 'beckhoff.0.plc.IOBROKER.VENT_TEMP', change: 'any'}, function (obj) {
+       {
+        if (obj.state.val != 0 && obj.state.val != 850)
+        {
+         setState("javascript.0.Temperature_vent_in",obj.state.val);
+        }
+       }
+});
+
+
+
+
+
+on({id: 'beckhoff.0.plc.IOBROKER.FIRST_FLOOR_CO2', change: 'any'}, function (obj) {
+       {
+        if (obj.state.val != 0)
+        {
+         setState('javascript.0.CO2_1_floor',obj.state.val);
+        }
+       }
+});
+
+on({id: 'beckhoff.0.plc.IOBROKER.SECOND_FLOOR_CO2', change: 'any'}, function (obj) {
+       {
+        if (obj.state.val != 0)
+        {
+         setState('javascript.0.CO2_2_floor',obj.state.val);
+        }
+       }
+});
+
+on({id: 'javascript.0.Target_level_CO2'/*Target level CO2*/, change: 'any'}, function (obj) {
+       {
+        if (obj.state.val != 0)
+        {
+         setState('beckhoff.0.plc.IOBROKER.TARGET_CO2'/*Target co2 [int]*/,obj.state.val);
+        }
+       }
+});
+
+///////////////////
+
+on({id: "mqtt.0.ESP_Easy.Sensor_underfloor.Humidity", change: 'any'}, function (obj) {
+     setState("megad.2.p1_HUM_underfloor_humidity"/*HUM_underfloor_humidity*/,obj.state.val);
+      
+   });
+   
+on({id: "mqtt.0.ESP_Easy.Sensor_underfloor.Temperature"/*/ESP_Easy/Sensor_underfloor/Temperature*/, change: 'any'}, function (obj) {
+     setState("megad.2.p1_HUM_underfloor"/*HUM_underfloor*/,obj.state.val);
+     })
+   
+   
+on({id: "mqtt.0.ESP_Easy.Sensor_street.Humidity", change: 'any'}, function (obj) {
+     setState("megad.2.p0_HUM_street_humidity"/*HUM_street_humidity*/,obj.state.val);
+   });
+   
+on({id: "mqtt.0.ESP_Easy.Sensor_street.Temperature", change: 'any'}, function (obj) {
+     setState("megad.2.p0_HUM_street",obj.state.val);
+      });
+   createState("javascript.0.Temperature_sauna",0);
+on({id: "mqtt.0.ESP_Easy.1wire_sauna.Temperature", change: 'any'}, function (obj) {
+     setState("javascript.0.Temperature_sauna",obj.state.val);
+      });
+      
+createState("javascript.0.Temperature_1floor",0);
+on({id: "mqtt.0.ESP_Easy.1wire_1floor.Temperature", change: 'any'}, function (obj) {
+     setState("javascript.0.Temperature_1floor",obj.state.val);
+      });   
+      
+createState("javascript.0.Temperature_2floor",0);
+on({id: "mqtt.0.ESP_Easy.1wire_2floor.Temperature", change: 'any'}, function (obj) {
+     setState("javascript.0.Temperature_2floor",obj.state.val);
+      }); 
+      
+createState("javascript.0.Temperature_sport",0);
+on({id: "mqtt.0.ESP_Easy.1wire_sport.Temperature", change: 'any'}, function (obj) {
+     setState("javascript.0.Temperature_sport",obj.state.val);
+      }); 
+      
+createState("javascript.0.Temperature_underfloor",0);
+on({id: "mqtt.0.ESP_Easy.1wire_underfloor.Temperature", change: 'any'}, function (obj) {
+     setState("javascript.0.Temperature_underfloor",obj.state.val);
+      });   
+createState("javascript.0.Temperature_balkon",0);
+on({id: "mqtt.0.ESP_Easy.1wire_balkon.Temperature", change: 'any'}, function (obj) {
+     setState("javascript.0.Temperature_balkon",obj.state.val);
+      }); 
+      
+      
+   
+
+
+on({id: /beckhoff.0.plc.IOBROKER.Uv*/, change: 'any'}, function (obj) {
+    
+  //var myjson=JSON.parse(obj.state.val);
+  setState("javascript.0.Uv1",getState('beckhoff.0.plc.IOBROKER.UV1').val);
+  setState("javascript.0.Uv2",getState('beckhoff.0.plc.IOBROKER.UV2').val);
+  setState("javascript.0.Uv3",getState('beckhoff.0.plc.IOBROKER.UV3').val);
+  
+  setState("javascript.0.Ia1",getState('beckhoff.0.plc.IOBROKER.IA1').val);
+  setState("javascript.0.Ia2",getState('beckhoff.0.plc.IOBROKER.IA2').val);
+  setState("javascript.0.Ia3",getState('beckhoff.0.plc.IOBROKER.IA3').val);
+  
+  setState("javascript.0.Pw_total",getState('beckhoff.0.plc.IOBROKER.PW_TOTAL').val);
+  setState("javascript.0.Pw1",getState('beckhoff.0.plc.IOBROKER.PW1').val);
+  setState("javascript.0.Pw2",getState('beckhoff.0.plc.IOBROKER.PW2').val);
+  setState("javascript.0.Pw3",getState('beckhoff.0.plc.IOBROKER.PW3').val);
+  
+  setState("javascript.0.E_T1",getState('beckhoff.0.plc.IOBROKER.E_T1').val);
+  setState("javascript.0.E_T2",getState('beckhoff.0.plc.IOBROKER.E_T2').val);
+      
+   });
+
+on({id: /javascript.0.Energy_tarif|modbus.0.holdingRegisters.12*/, change: 'any'}, function (obj) {
+    var tarrif=getState("javascript.0.Energy_tarif").val;
+ // log ('new tarriff');
+   
+  var table_mer230 = [{"month":1,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":2,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":3,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":4,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":5,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":6,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":7,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":8,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":9,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":10,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":11,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0},
+    {"month":12,"T1":0,"T2":0,"T1_potr":0,"T2_potr":0,"Total":0}];  
+    for(var i=1;i<13;i++)
+    {
+       
+    table_mer230[i-1]["month"]=i;
+    var num_reg=12284+i*4; 
+    var num_reg2=12286+i*4;
+    
+    table_mer230[i-1]["T1"]=getState('modbus.0.holdingRegisters.'+num_reg+'_M'+i+'T1').val;
+    table_mer230[i-1]["T2"]=getState('modbus.0.holdingRegisters.'+num_reg2+'_M'+i+'T2').val;
+    table_mer230[i-1]["T1_potr"]=Math.round( table_mer230[i-1]["T1"]*tarrif); 
+    table_mer230[i-1]["T2_potr"]=Math.round(table_mer230[i-1]["T2"]*tarrif/2);
+    table_mer230[i-1]["Total"]=table_mer230[i-1]["T1_potr"]+table_mer230[i-1]["T2_potr"];
+  
+     } 
+    //log('table='+JSON.stringify(table_mer230));
+    setState("javascript.0.History_mer230", JSON.stringify(table_mer230));
+      
+   });
