@@ -1,0 +1,38 @@
+
+createState("html_electro_status_table");
+
+on({id: /javascript.0.Uv*/, change: "any"}, function (obj) {
+
+    var css="<STYLE TYPE=\\\"text/css\\\"> TD{font-family: Arial; font-size: 11pt;} </STYLE>";
+    var obj_html = "\" <table  border='2' style='width:100%; font: 11pt arial;text-align:center' > <col width=150><col width=70><col width=70>";
+    var table_head ="<tr><td><b>Счётчик</b></td><td><b>Показание</b></td></tr>";
+    obj_html = obj_html + table_head;
+
+    var tr="<tr>";
+    var tr2="</tr>";
+    var td1='<td><a>Напряжение, В</a></td>';
+    var td2="<td><font color=red>"+getState('javascript.0.Uv').val.toFixed(1)+"</font></td>";
+    obj_html = obj_html + tr+td1+td2+tr2;
+
+    var td1='<td><a>Ток, А</a></td>';
+    var td2="<td><font color=orange>"+getState('javascript.0.Ia').val.toFixed(1)+"</font></td>";
+    obj_html = obj_html + tr+td1+td2+tr2;
+
+    var td1='<td><a>Мощность, Ватт</a></td>';
+    var td2="<td><font color=blue>"+getState('javascript.0.Pw').val.toFixed(0)+"</font></td>";
+    obj_html = obj_html + tr+td1+td2+tr2;
+
+    var td1='<td><a>Потребление T1, квт*ч</a></td>';
+    var td2="<td><font color=black>"+getState('javascript.0.E_T1').val.toFixed(0)+"</font></td>";
+    obj_html = obj_html + tr+td1+td2+tr2;
+
+    var td1='<td><a>Потребление T2, квт*ч</a></td>';
+    var td2="<td><font color=black>"+getState('javascript.0.E_T2').val.toFixed(0)+"</font></td>";
+
+    obj_html = obj_html + tr+td1+td2+tr2;
+    obj_html = obj_html +"</table>\"" ;
+
+    setState("html_electro_status_table",obj_html);
+});
+
+
