@@ -1,0 +1,376 @@
+
+PROGRAM RS485read
+VAR
+timeoutvalue : TIME := T#500ms; (* timeout while waiting for an answer of the modbus slave *)
+delta_sensor_hum : INT:=15; (*Корректировка показаний датчика, % относительной влажности*)
+Period_steam : INT := 60; (* Частота изменения уставки мощности увлажнителя, секунды*)
+Period_modbus : INT := 10; (* Частота опроса устройств modbus, секунды*)
+
+r_Target_hum : REAL;
+r_room_hum : REAL;
+i_Steam_level : INT:=0;
+MBdata : ARRAY [1..2] OF WORD; (* The size of this array can be adapted to the modbus slaves register area *)
+
+
+
+
+FtrigBusy : F_TRIG;
+state : INT;
+busy : BOOL;
+LastErrorstate : INT;
+LastModbusError : ST_ModbusErrorDiagnostics;
+CounterError : DINT;
+CounterSuccess : DINT;
+Timer1 : TON;
+Timer1Q : BOOL;
+Hum_old : REAL;
+Steam_response : WORD:=0;
+Timer2 : TON;
+Timer2Q : BOOL;
+tTimerValue : TIME;
+tTimerValue_modbus : TIME;
+get_run_Merc200_done : BOOL;
+get_hist_Merc200_done : BOOL;
+get_run_Merc200 : FB_GET_RUN_MERC200;
+get_hist_Merc200 : FB_GET_HIST_MERC200;
+
+tmCheck: TON;
+END_VAR
+
+
+
+
+
+
+
+
+
+
+tmcheck();
+CASE state OF
+0:
+MB.ReadRegs(Execute:= FALSE);
+state := 2;
+
+
+2: (* Kitchen_room Temperature and Humidity *)
+Clear(Buffer := RxBufferCom1);
+MB.ReadRegs(
+UnitID:= 16#01, (* station address *)
+Quantity:= 2,
+MBAddr:= 0,
+cbLength:= 6,
+pMemoryAddr:= ADR(MBdata),
+Execute:= TRUE,
+Timeout:= timeoutvalue,
+Busy => busy,
+);
+IF NOT busy THEN
+IF (mb.Error = FALSE ) THEN
+iobroker.Kitchen_room_temp:=WORD_TO_REAL(MBdata[1])/10;
+iobroker.Kitchen_room_hum:=WORD_TO_REAL(MBdata[2])/10 - delta_sensor_hum;
+MB.ReadRegs(Execute:= FALSE);
+state := 3;
+END_IF
+MB.ReadRegs(Execute:= FALSE);
+state :=3;
+END_IF
+
+3: (* Bed_room Temperature and Humidity *)
+MB.ReadRegs(
+UnitID:= 16#02, (* station address *)
+Quantity:= 2,
+MBAddr:= 0,
+cbLength:= 6,
+pMemoryAddr:= ADR(MBdata),
+Execute:= TRUE,
+Timeout:= timeoutvalue,
+Busy => busy );
+IF NOT busy THEN
+IF (mb.Error = FALSE ) THEN
+iobroker.Bed_room_temp:=WORD_TO_REAL(MBdata[1])/10;
+iobroker.Bed_room_hum:=WORD_TO_REAL(MBdata[2])/10 - delta_sensor_hum;
+MB.ReadRegs(Execute:= FALSE);
+state := 4;
+END_IF
+MB.ReadRegs(Execute:= FALSE);
+state := 4;
+END_IF
+
+4: (* Child_big_room Temperature and Humidity *)
+MB.ReadRegs(
+UnitID:= 16#03, (* station address *)
+Quantity:= 2,
+MBAddr:= 0,
+cbLength:= 6,
+pMemoryAddr:= ADR(MBdata),
+Execute:= TRUE,
+Timeout:= timeoutvalue,
+Busy => busy );
+IF NOT busy THEN
+IF (mb.Error = FALSE ) THEN
+iobroker.Child_big_room_temp:=WORD_TO_REAL(MBdata[1])/10;
+iobroker.Child_big_room_hum:=WORD_TO_REAL(MBdata[2])/10 - delta_sensor_hum;
+MB.ReadRegs(Execute:= FALSE);
+state := 5;
+END_IF
+MB.ReadRegs(Execute:= FALSE);
+state := 5;
+
+END_IF
+
+5: (* Child_small_room Temperature and Humidity *)
+MB.ReadRegs(
+UnitID:= 55, (* station address *)
+Quantity:= 2,
+MBAddr:= 0,
+cbLength:= 6,
+pMemoryAddr:= ADR(MBdata),
+Execute:= TRUE,
+Timeout:= timeoutvalue,
+Busy => busy );
+IF NOT busy THEN
+IF (mb.Error = FALSE ) THEN
+iobroker.Child_small_room_temp:=WORD_TO_REAL(MBdata[1])/10;
+iobroker.Child_small_room_hum:=WORD_TO_REAL(MBdata[2])/10 - delta_sensor_hum;
+MB.ReadRegs(Execute:= FALSE);
+state := 26;
+END_IF
+MB.ReadRegs(Execute:= FALSE);
+state := 26;
+
+END_IF
+
+26: (* Kitchen_room CO2 *)
+MB.ReadInputRegs(
+UnitID:= 16#68, (* station address *)
+Quantity:= 1,
+MBAddr:= 3,
+cbLength:= 4,
+pMemoryAddr:= ADR(MBdata),
+Execute:= TRUE,
+Timeout:= timeoutvalue,
+Busy => busy );
+IF NOT busy THEN
+IF (mb.Error = FALSE ) THEN
+iobroker.Kitchen_room_CO2:=WORD_TO_REAL(MBdata[1]);
+END_IF
+MB.ReadRegs(Execute:= FALSE);
+state := 27;
+END_IF
+
+27: (* Bed_room CO2 *)
+MB.ReadInputRegs(
+UnitID:= 101, (* station address *)
+Quantity:= 1,
+MBAddr:= 3,
+cbLength:= 4,
+pMemoryAddr:= ADR(MBdata),
+Execute:= TRUE,
+Timeout:= timeoutvalue,
+Busy => busy );
+IF NOT busy THEN
+IF (mb.Error = FALSE ) THEN
+iobroker.Bed_room_CO2:=WORD_TO_REAL(MBdata[1]);
+END_IF
+MB.ReadRegs(Execute:= FALSE);
+state := 28;
+END_IF
+
+28: (* Child_big_room CO2 *)
+MB.ReadInputRegs(
+UnitID:= 102, (* station address *)
+Quantity:= 1,
+MBAddr:= 3,
+cbLength:= 4,
+pMemoryAddr:= ADR(MBdata),
+Execute:= TRUE,
+Timeout:= timeoutvalue,
+Busy => busy );
+IF NOT busy THEN
+IF (mb.Error = FALSE ) THEN
+iobroker.Child_big_room_CO2:=WORD_TO_REAL(MBdata[1]);
+END_IF
+MB.ReadRegs(Execute:= FALSE);
+state := 29;
+END_IF
+
+29: (* Child_small_room CO2 *)
+MB.ReadInputRegs(
+UnitID:= 103, (* station address *)
+Quantity:= 1,
+MBAddr:= 3,
+cbLength:= 4,
+pMemoryAddr:= ADR(MBdata),
+Execute:= TRUE,
+Timeout:= timeoutvalue,
+Busy => busy );
+IF NOT busy THEN
+IF (mb.Error = FALSE ) THEN
+iobroker.Child_small_room_CO2:=WORD_TO_REAL(MBdata[1]);
+END_IF
+MB.ReadRegs(Execute:= FALSE);
+state := 47;
+END_IF
+
+47: (*Изменение уставки мощности увлажнителя при необходимости с частотой Period_steam *)
+
+IF (iobroker.Steam=TRUE AND iobroker.Vent=TRUE ) THEN
+r_Target_hum:=INT_TO_REAL( iobroker.Target_Hum) ;
+r_room_hum:=iobroker.Bed_room_hum;
+tTimerValue := DINT_TO_TIME(Period_steam*1000);
+Timer2(IN:=NOT Timer2Q , PT:=tTimerValue , Q=>Timer2Q , ET=> );
+IF timer2.q THEN
+IF ( r_room_hum <= r_Target_hum*0.5 AND i_Steam_level< 50 ) THEN
+i_Steam_level:=50;
+END_IF
+
+IF ( ( r_room_hum <= Hum_old )
+AND ( r_room_hum > r_Target_hum*0.5)
+AND ( r_room_hum < r_Target_hum*0.95 )) THEN
+i_Steam_level:=i_Steam_level+1;
+END_IF
+
+IF ( r_room_hum >= r_Target_hum*1.05) THEN
+i_Steam_level:=i_Steam_level-1;
+END_IF
+
+Hum_old:=r_room_hum;
+
+END_IF
+
+IF (i_Steam_level>100) THEN
+i_Steam_level:=100;
+END_IF
+
+IF (i_Steam_level<10) THEN
+i_Steam_level:=10;
+END_IF
+
+iobroker.Steam_level:=INT_TO_BYTE(i_Steam_level);
+
+MB.WriteSingleRegister(
+UnitID:= 16#0A, (* station address *)
+Quantity:= 1,
+MBAddr:= 1537,
+cbLength:= 2,
+pMemoryAddr:= ADR(iobroker.Steam_level),
+Execute:= TRUE,
+Timeout:= timeoutvalue,
+Busy => busy );
+IF NOT busy THEN
+MB.WriteSingleRegister(Execute:= FALSE);
+state := 77;
+END_IF
+ELSE
+iobroker.Steam_level:=0;
+state := 77;
+END_IF
+
+
+77: (* Фактический процент текущей мощности увлажнителя *)
+
+MB.ReadRegs(
+UnitID:= 16#0A, (* station address *)
+Quantity:= 1,
+MBAddr:= 261,
+cbLength:= 2,
+pMemoryAddr:= ADR(Steam_response),
+Execute:= TRUE,
+Timeout:= timeoutvalue,
+Busy => busy );
+IF NOT busy THEN
+IF (mb.Error = FALSE ) THEN
+iobroker.Steam_real:=Steam_response;
+END_IF
+MB.ReadRegs(Execute:= FALSE);
+state := 78;
+
+END_IF
+
+
+78: (* Контрольный датчик Температуры и Влажности*)
+
+MB.ReadRegs(
+UnitID:= 16#07, (* station address *)
+Quantity:= 2,
+MBAddr:= 0,
+cbLength:= 6,
+pMemoryAddr:= ADR(MBdata),
+Execute:= TRUE,
+Timeout:= timeoutvalue,
+Busy => busy );
+IF NOT busy THEN
+IF (mb.Error = FALSE ) THEN
+iobroker.Bed_room_temp2:=WORD_TO_REAL(MBdata[1])/10;
+iobroker.Bed_room_hum2:=WORD_TO_REAL(MBdata[2])/10;
+MB.ReadRegs(Execute:= FALSE);
+state := 79;
+END_IF
+MB.ReadRegs(Execute:= FALSE);
+state := 79;
+
+END_IF
+79:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_run_Merc200_done := FALSE;
+busy:=TRUE;
+get_run_Merc200( Uv=>iobroker.Uv,Ia=>iobroker.Ia,Pw=>iobroker.Pw, done=>get_run_Merc200_done);
+IF get_run_Merc200_done = TRUE THEN
+busy:=FALSE;
+state:=80;
+ELSIF tmcheck.Q THEN
+busy:=FALSE;
+state:=80;
+END_IF
+
+80:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_hist_Merc200_done := FALSE;
+busy:=TRUE;
+get_hist_Merc200( E_T1=>iobroker.E_T1,E_T2=>iobroker.E_T2,E_T4=>iobroker.E_T4, done=>get_hist_Merc200_done);
+IF get_hist_Merc200_done = TRUE THEN
+busy:=FALSE;
+state:=88;
+ELSIF tmcheck.Q THEN
+busy:=FALSE;
+state:=88;
+END_IF
+
+88:
+tTimerValue_modbus := DINT_TO_TIME(Period_modbus*1000);
+Timer1(IN:=NOT Timer1Q , PT:=tTimerValue_modbus , Q=>Timer1Q , ET=> );
+IF timer1.q THEN
+
+state:=0;
+END_IF
+
+END_CASE
+
+FtrigBusy(CLK:=mb.BUSY );
+IF FtrigBusy.Q THEN
+IF mb.Error THEN
+LastModbusError := mb.ErrorDiagnostics;
+LastErrorstate := state;
+CounterError := CounterError + 1;
+ELSE
+CounterSuccess := CounterSuccess + 1;
+END_IF
+END_IF
+
+SerialLinecontrolCom1(
+mode:=SerialLinemode_kl6_22b_standard,
+pComIn:=ADR(RS485read.MB.InData),
+pComOut:=ADR(RS485read.MB.OutData),
+SizeComIn:=SIZEOF(RS485read.MB.OutData),
+TxBuffer:=TxBufferCom1,
+RxBuffer:=RxBufferCom1,
+Error=>,
+errorid=>);
+
+
+
+
+
