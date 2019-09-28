@@ -1,0 +1,104 @@
+PROGRAM Mqtt
+VAR
+	FB_Mqtt_Controller 		: FB_Mqtt_Controller_V10;
+	stMqttSettings				: ST_MqttSettings;
+	bMqttControllerBusy		: BOOL;
+
+	FB_Mqtt_Publish1 			: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish2			: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish3			: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish4			: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish5			: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish6			: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish7			: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish8			: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish9			: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish10		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish11		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish12		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish13 		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish14		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish15		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish16		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish17		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish18		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish19		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish20		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish21		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish22		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish23		: FB_Mqtt_Publish_V10;
+	FB_Mqtt_Publish24		: FB_Mqtt_Publish_V10;
+
+	bPublishBusy1			: BOOL;
+	bPublishBusy2			: BOOL;
+	bPublishBusy3			: BOOL;
+	bPublishBusy4			: BOOL;
+	bPublishBusy5			: BOOL;
+	bPublishBusy6			: BOOL;
+	bPublishBusy7			: BOOL;
+	bPublishBusy8			: BOOL;
+	bPublishBusy9			: BOOL;
+	bPublishBusy10			: BOOL;
+	bPublishBusy11			: BOOL;
+	bPublishBusy12			: BOOL;
+	bPublishBusy13			: BOOL;
+	bPublishBusy14			: BOOL;
+	bPublishBusy15			: BOOL;
+	bPublishBusy16			: BOOL;
+	bPublishBusy17			: BOOL;
+	bPublishBusy18			: BOOL;
+	bPublishBusy19			: BOOL;
+	bPublishBusy20			: BOOL;
+	bPublishBusy21			: BOOL;
+	bPublishBusy22			: BOOL;
+	bPublishBusy23			: BOOL;
+	bPublishBusy24			: BOOL;
+	START: BOOL;
+END_VAR
+
+
+
+
+
+
+
+
+FB_Mqtt_Controller (
+		bActive			:= TRUE,
+		sMqttClientId		:= 'plc',
+		sMqttUserId		:= 'mqtt',
+		sMqttPassword	:= 'mqtt',
+		sMqttBrokerIp		:= '192.168.2.200',
+		nMqttBrokerPort	:= 1883,
+		stMqttSettings		:= stMqttSettings,
+		bBusy			=> bMqttControllerBusy
+	);
+
+IF NOT bMqttControllerBusy THEN
+
+	FB_Mqtt_Publish1(sTopic:='BECKHOFF_CX9000/Mercury/M1T1',sValue:=REAL_TO_STRING(Mercury.M1T1),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy1 );
+	FB_Mqtt_Publish2(sTopic:='BECKHOFF_CX9000/Mercury/M1T2',sValue:=REAL_TO_STRING(Mercury.M1T2),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy2 );
+	FB_Mqtt_Publish3(sTopic:='BECKHOFF_CX9000/Mercury/M2T1',sValue:=REAL_TO_STRING(Mercury.M2T1),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy3 );
+	FB_Mqtt_Publish4(sTopic:='BECKHOFF_CX9000/Mercury/M2T2',sValue:=REAL_TO_STRING(Mercury.M2T2),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy4 );
+	FB_Mqtt_Publish5(sTopic:='BECKHOFF_CX9000/Mercury/M3T1',sValue:=REAL_TO_STRING(Mercury.M3T1),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy5 );
+	FB_Mqtt_Publish6(sTopic:='BECKHOFF_CX9000/Mercury/M3T2',sValue:=REAL_TO_STRING(Mercury.M3T2),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy6 );
+	FB_Mqtt_Publish7(sTopic:='BECKHOFF_CX9000/Mercury/M4T1',sValue:=REAL_TO_STRING(Mercury.M4T1),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy7 );
+	FB_Mqtt_Publish8(sTopic:='BECKHOFF_CX9000/Mercury/M4T2',sValue:=REAL_TO_STRING(Mercury.M4T2),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy8 );
+	FB_Mqtt_Publish9(sTopic:='BECKHOFF_CX9000/Mercury/M5T1',sValue:=REAL_TO_STRING(Mercury.M5T1),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy9 );
+	FB_Mqtt_Publish10(sTopic:='BECKHOFF_CX9000/Mercury/M5T2',sValue:=REAL_TO_STRING(Mercury.M5T2),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy10 );
+	FB_Mqtt_Publish11(sTopic:='BECKHOFF_CX9000/Mercury/M6T1',sValue:=REAL_TO_STRING(Mercury.M6T1),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy11 );
+	FB_Mqtt_Publish12(sTopic:='BECKHOFF_CX9000/Mercury/M6T2',sValue:=REAL_TO_STRING(Mercury.M6T2),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy12 );
+	FB_Mqtt_Publish13(sTopic:='BECKHOFF_CX9000/Mercury/M7T1',sValue:=REAL_TO_STRING(Mercury.M7T1),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy13 );
+	FB_Mqtt_Publish14(sTopic:='BECKHOFF_CX9000/Mercury/M7T2',sValue:=REAL_TO_STRING(Mercury.M7T2),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy14);
+	FB_Mqtt_Publish15(sTopic:='BECKHOFF_CX9000/Mercury/M8T1',sValue:=REAL_TO_STRING(Mercury.M8T1),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy15 );
+	FB_Mqtt_Publish16(sTopic:='BECKHOFF_CX9000/Mercury/M8T2',sValue:=REAL_TO_STRING(Mercury.M8T2),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy16 );
+	FB_Mqtt_Publish17(sTopic:='BECKHOFF_CX9000/Mercury/M9T1',sValue:=REAL_TO_STRING(Mercury.M9T1),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy17 );
+	FB_Mqtt_Publish18(sTopic:='BECKHOFF_CX9000/Mercury/M9T2',sValue:=REAL_TO_STRING(Mercury.M9T2),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy18 );
+	FB_Mqtt_Publish19(sTopic:='BECKHOFF_CX9000/Mercury/M10T1',sValue:=REAL_TO_STRING(Mercury.M10T1),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy19 );
+	FB_Mqtt_Publish20(sTopic:='BECKHOFF_CX9000/Mercury/M10T2',sValue:=REAL_TO_STRING(Mercury.M10T2),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy20 );
+	FB_Mqtt_Publish21(sTopic:='BECKHOFF_CX9000/Mercury/M11T1',sValue:=REAL_TO_STRING(Mercury.M11T1),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy21 );
+	FB_Mqtt_Publish22(sTopic:='BECKHOFF_CX9000/Mercury/M11T2',sValue:=REAL_TO_STRING(Mercury.M11T2),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy22 );
+	FB_Mqtt_Publish23(sTopic:='BECKHOFF_CX9000/Mercury/M12T1',sValue:=REAL_TO_STRING(Mercury.M12T1),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy23 );
+	FB_Mqtt_Publish24(sTopic:='BECKHOFF_CX9000/Mercury/M12T2',sValue:=REAL_TO_STRING(Mercury.M12T2),bRetain:=FALSE, stMqttSettings:=stMqttSettings,bBusy => bPublishBusy24 );
+END_IF
+
