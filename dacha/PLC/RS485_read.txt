@@ -1,0 +1,556 @@
+
+PROGRAM RS485read
+VAR
+
+password_1 : ARRAY [1..6] OF BYTE:=6(1); (* пароль к меркуриям, по умолчанию 6 единиц*)
+crctest : WORD;
+arrReceive : ARRAY[1..22] OF BYTE;
+arrSend : ARRAY[1..22] OF BYTE;
+
+MBdata_kitchen : ARRAY [1..2] OF WORD;
+FtrigBusy : F_TRIG;
+timeoutvalue : TIME := T#500ms; (* timeout while waiting for an answer of the modbus slave *)
+state : INT;
+busy : BOOL;
+LastErrorstate : INT;
+LastModbusError : ST_ModbusErrorDiagnostics;
+CounterError : DINT;
+CounterSuccess : DINT;
+Timer1 : TON;
+Timer1Q : BOOL;
+Timer_day :TON;
+Timer_dayQ :BOOL;
+
+tmCheck :TON;
+
+get_co2_mh_z19b_1floor : FB_GET_CO2_MH_Z19B;
+get_co2_mh_z19b_2floor : FB_GET_CO2_MH_Z19B;
+get_supply : FB_GET_SUPPLY;
+get_current : FB_GET_CURRENT;
+get_power : FB_GET_POWER;
+get_energy_E_T1 : FB_GET_ENERGY;
+get_energy_E_T2 : FB_GET_ENERGY;
+get_energy_M1T1 : FB_GET_ENERGY;
+get_energy_M1T2 : FB_GET_ENERGY;
+get_energy_M2T1 : FB_GET_ENERGY;
+get_energy_M2T2 : FB_GET_ENERGY;
+get_energy_M3T1 : FB_GET_ENERGY;
+get_energy_M3T2 : FB_GET_ENERGY;
+get_energy_M4T1 : FB_GET_ENERGY;
+get_energy_M4T2 : FB_GET_ENERGY;
+get_energy_M5T1 : FB_GET_ENERGY;
+get_energy_M5T2 : FB_GET_ENERGY;
+get_energy_M6T1 : FB_GET_ENERGY;
+get_energy_M6T2 : FB_GET_ENERGY;
+get_energy_M7T1 : FB_GET_ENERGY;
+get_energy_M7T2 : FB_GET_ENERGY;
+get_energy_M8T1 : FB_GET_ENERGY;
+get_energy_M8T2 : FB_GET_ENERGY;
+get_energy_M9T1 : FB_GET_ENERGY;
+get_energy_M9T2 : FB_GET_ENERGY;
+get_energy_M10T1 : FB_GET_ENERGY;
+get_energy_M10T2 : FB_GET_ENERGY;
+get_energy_M11T1 : FB_GET_ENERGY;
+get_energy_M11T2 : FB_GET_ENERGY;
+get_energy_M12T1 : FB_GET_ENERGY;
+get_energy_M12T2 : FB_GET_ENERGY;
+
+get_co2_mh_z19b_1floor_done : BOOL;
+get_co2_mh_z19b_2floor_done : BOOL;
+get_supply_done : BOOL;
+get_current_done : BOOL;
+get_power_done : BOOL;
+get_energy_E_T1_done : BOOL;
+get_energy_E_T2_done : BOOL;
+get_energy_M1T1_done : BOOL;
+get_energy_M1T2_done : BOOL;
+get_energy_M2T1_done : BOOL;
+get_energy_M2T2_done : BOOL;
+get_energy_M3T1_done : BOOL;
+get_energy_M3T2_done : BOOL;
+get_energy_M4T1_done : BOOL;
+get_energy_M4T2_done : BOOL;
+get_energy_M5T1_done : BOOL;
+get_energy_M5T2_done : BOOL;
+get_energy_M6T1_done : BOOL;
+get_energy_M6T2_done : BOOL;
+get_energy_M7T1_done : BOOL;
+get_energy_M7T2_done : BOOL;
+get_energy_M8T1_done : BOOL;
+get_energy_M8T2_done : BOOL;
+get_energy_M9T1_done : BOOL;
+get_energy_M9T2_done : BOOL;
+get_energy_M10T1_done : BOOL;
+get_energy_M10T2_done : BOOL;
+get_energy_M11T1_done : BOOL;
+get_energy_M11T2_done : BOOL;
+get_energy_M12T1_done : BOOL;
+get_energy_M12T2_done : BOOL;
+END_VAR
+
+VAR_INPUT
+
+
+END_VAR
+
+
+
+
+
+
+
+
+
+
+tmCheck();
+Timer_day();
+
+CASE state OF
+0:
+MB.ReadRegs(Execute:= FALSE);
+
+state := 1;
+1: (* Read Temp and Hum data from sensor *)
+Clear(Buffer := RxBufferCom1);
+MB.ReadRegs(
+UnitID:= 16#07, (* station address *)
+Quantity:= 2, (* WORDs *)
+MBAddr:= 0,
+cbLength:= 6,
+pMemoryAddr:= ADR(MBdata_kitchen),
+Execute:= TRUE,
+Timeout:= timeoutvalue,
+Busy => busy,
+);
+IF NOT busy THEN
+IF (mb.Error = FALSE ) THEN
+iobroker.Kitchen_room_temp:=WORD_TO_REAL(MBdata_kitchen[1])/10;
+iobroker.Kitchen_room_hum:=WORD_TO_REAL(MBdata_kitchen[2])/10;
+MB.ReadRegs(Execute:= FALSE);
+state := 2;
+END_IF
+MB.ReadRegs(Execute:= FALSE);
+state :=2;
+END_IF
+
+2: (* Read CO2 from sensor *)
+
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_co2_mh_z19b_1floor_done := FALSE;
+get_co2_mh_z19b_1floor( co2=>iobroker.First_Floor_CO2, done=>get_co2_mh_z19b_1floor_done);
+IF get_co2_mh_z19b_1floor_done = TRUE THEN
+state:=3;
+ELSIF tmcheck.Q THEN
+state:=3;
+END_IF
+
+3:
+HW_switch_RS485:=TRUE;
+Timer1(IN:=NOT Timer1Q , PT:=T#1s , Q=>Timer1Q , ET=> );
+IF timer1.q THEN
+state:=4;
+END_IF
+
+4:
+
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_co2_mh_z19b_2floor_done := FALSE;
+get_co2_mh_z19b_2floor( co2=>iobroker.Second_Floor_CO2, done=>get_co2_mh_z19b_2floor_done);
+IF get_co2_mh_z19b_2floor_done = TRUE THEN
+state:=41;
+ELSIF tmcheck.Q THEN
+state:=41;
+END_IF
+
+
+
+41:
+Timer1(IN:=NOT Timer1Q , PT:=T#2s , Q=>Timer1Q , ET=> );
+IF timer1.q THEN
+HW_switch_RS485:=FALSE;
+state:=5;
+END_IF
+
+5: (*открываем канал*)
+
+
+Clear(Buffer := RxBufferCom1);
+arrSend[1]:=Merc_address;
+arrSend[2]:=1; (*код доступа*)
+arrSend[3]:=1; (*Уровень доступа*)
+
+MEMCPY(ADR(arrSend)+3,ADR(password_1),6); (*пароль*)
+crctest:=F_CRC16(ADR(arrSend),9); (*расчет контрольной суммы*)
+MEMCPY(ADR(arrSend)+9,ADR(crctest),SIZEOF(crctest)); (*прибавление контрольной суммы к запросу*)
+SendDataCom1(pSendData:=ADR(arrSend),Length:=11,TXBuffer:=TxBufferCom1,Busy=>,Error=>);
+tmCheck(in:=FALSE); tmCheck(in:=TRUE,pt:=t#2s); (*запуск таймера проверки - потеря связи\обрыв кабеля*)
+state:=6;
+
+6: (*ответ*)
+ReceiveDataCom1(pPrefix:=,LenPrefix:=,pSuffix:=,LenSuffix:=,
+pReceiveData:=ADR(arrReceive),SizeReceiveData:=4,
+Timeout:=t#2s,Reset:=,
+RXbuffer:=RxBufferCom1,
+DataReceived=>,busy=>,Error=>,RxTimeout=>,LenReceiveData=>);
+IF ReceiveDataCom1.Error <> 0 THEN state:=888; END_IF
+IF receiveDataCom1.DataReceived THEN state:=7;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+7: (*проверка ответа*)
+
+IF arrReceive[1] = Merc_address THEN state:= 8;
+ELSE state:=888;
+END_IF
+
+
+
+8:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_supply_done := FALSE;
+get_supply( byte1:=16#8, byte2:=16#16, byte3:=16#11, supply1=>iobroker.UV1,supply2=>iobroker.UV2,supply3=>iobroker.UV3, done=>get_supply_done);
+IF get_supply_done = TRUE THEN
+state:=9;
+ELSIF tmcheck.Q THEN
+state:=888;
+END_IF
+
+(*запрос на чтение тока на всех фазах
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*)
+9:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_current_done := FALSE;
+get_current(byte1:=16#8, byte2:=16#16, byte3:=16#21, current1=>iobroker.Ia1,current2=>iobroker.Ia2,current3=>iobroker.Ia3, done=>get_current_done);
+IF get_current_done = TRUE THEN
+state:=10;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+
+(*запрос на чтение мощности на всех фазах
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*)
+
+10:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_power_done := FALSE;
+get_power(byte1:=16#8, byte2:=16#16, byte3:=16#0, power_total=>iobroker.pw_total, power1=>iobroker.pw1, power2=>iobroker.pw2,power3=>iobroker.pw3,done=>get_power_done);
+IF get_power_done = TRUE THEN
+state:=11;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+
+(*запрос на чтение энергии T1
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*)
+11:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_E_T1_done := FALSE;
+get_energy_E_T1(byte1:=5, byte2:=16#0, byte3:=1, energy=>iobroker.E_T1, done=>get_energy_E_T1_done);
+IF get_energy_E_T1_done = TRUE THEN
+state:=12;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+(*запрос на чтение энергии T2
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*)
+
+12:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_E_T2_done := FALSE;
+get_energy_E_T2(byte1:=5, byte2:=16#0, byte3:=2, energy=>iobroker.E_T2, done=>get_energy_E_T2_done);
+IF get_energy_E_T2_done = TRUE THEN
+state:=13;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+
+
+13:
+Timer_day(IN:=NOT Timer_dayQ , PT:=T#10m , Q=>Timer_dayQ , ET=> );
+IF timer_day.q THEN
+state:=14;
+ELSE
+state:=888;
+END_IF
+
+14:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M1T1_done := FALSE;
+get_energy_M1T1(byte1:=5, byte2:=16#31, byte3:=1, energy=>MB_vars.M1T1,done=>get_energy_M1T1_done);
+IF get_energy_M1T1_done = TRUE THEN
+Mercury.M1T1:=MB_vars.M1T1;
+state:=15;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+15:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M1T2_done := FALSE;
+get_energy_M1T2(byte1:=5, byte2:=16#31, byte3:=2,energy=>MB_vars.M1T2,done=>get_energy_M1T2_done);
+IF get_energy_M1T2_done = TRUE THEN
+Mercury.M1T2:=MB_vars.M1T2;
+state:=16;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+
+16:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M2T1_done := FALSE;
+get_energy_M2T1(byte1:=5, byte2:=16#32, byte3:=1, energy=>MB_vars.M2T1, done=>get_energy_M2T1_done);
+IF get_energy_M2T1_done = TRUE THEN
+Mercury.M2T1:=MB_vars.M2T1;
+state:=17;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+17:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M2T2_done := FALSE;
+get_energy_M2T2(byte1:=5, byte2:=16#32, byte3:=2, energy=>MB_vars.M2T2,done=>get_energy_M2T2_done);
+IF get_energy_M2T2_done = TRUE THEN
+Mercury.M2T2:=MB_vars.M2T2;
+state:=18;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+18:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M3T1_done := FALSE;
+get_energy_M3T1(byte1:=5, byte2:=16#33, byte3:=1, energy=>MB_vars.M3T1, done=>get_energy_M3T1_done);
+IF get_energy_M3T1_done = TRUE THEN
+Mercury.M3T1:=MB_vars.M3T1;
+state:=19;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+19:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M3T2_done := FALSE;
+get_energy_M3T2(byte1:=5, byte2:=16#33, byte3:=2, energy=>MB_vars.M3T2,done=>get_energy_M3T2_done);
+IF get_energy_M3T2_done = TRUE THEN
+Mercury.M3T2:=MB_vars.M3T2;
+state:=20;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+20:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M4T1_done := FALSE;
+get_energy_M4T1(byte1:=5, byte2:=16#34, byte3:=1, energy=>MB_vars.M4T1, done=>get_energy_M4T1_done);
+IF get_energy_M4T1_done = TRUE THEN
+Mercury.M4T1:=MB_vars.M4T1;
+state:=21;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+21:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M4T2_done := FALSE;
+get_energy_M4T2(byte1:=5, byte2:=16#34, byte3:=2, energy=>MB_vars.M4T2,done=>get_energy_M4T2_done);
+IF get_energy_M4T2_done = TRUE THEN
+Mercury.M4T2:=MB_vars.M4T2;
+state:=22;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+22:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M5T1_done := FALSE;
+get_energy_M5T1(byte1:=5, byte2:=16#35, byte3:=1, energy=>MB_vars.M5T1, done=>get_energy_M5T1_done);
+IF get_energy_M5T1_done = TRUE THEN
+Mercury.M5T1:=MB_vars.M5T1;
+state:=23;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+23:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M5T2_done := FALSE;
+get_energy_M5T2(byte1:=5, byte2:=16#35, byte3:=2, energy=>MB_vars.M5T2,done=>get_energy_M5T2_done);
+IF get_energy_M5T2_done = TRUE THEN
+Mercury.M5T2:=MB_vars.M5T2;
+state:=24;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+24:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M6T1_done := FALSE;
+get_energy_M6T1(byte1:=5, byte2:=16#36, byte3:=1, energy=>MB_vars.M6T1, done=>get_energy_M6T1_done);
+IF get_energy_M6T1_done = TRUE THEN
+Mercury.M6T1:=MB_vars.M6T1;
+state:=25;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+25:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M6T2_done := FALSE;
+get_energy_M6T2(byte1:=5, byte2:=16#36, byte3:=2, energy=>MB_vars.M6T2,done=>get_energy_M6T2_done);
+IF get_energy_M6T2_done = TRUE THEN
+Mercury.M6T2:=MB_vars.M6T2;
+state:=26;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+26:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M7T1_done := FALSE;
+get_energy_M7T1(byte1:=5, byte2:=16#37, byte3:=1, energy=>MB_vars.M7T1, done=>get_energy_M7T1_done);
+IF get_energy_M7T1_done = TRUE THEN
+Mercury.M7T1:=MB_vars.M7T1;
+state:=27;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+27:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M7T2_done := FALSE;
+get_energy_M7T2(byte1:=5, byte2:=16#37, byte3:=2, energy=>MB_vars.M7T2,done=>get_energy_M7T2_done);
+IF get_energy_M7T2_done = TRUE THEN
+Mercury.M7T2:=MB_vars.M7T2;
+state:=28;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+28:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M8T1_done := FALSE;
+get_energy_M8T1(byte1:=5, byte2:=16#38, byte3:=1, energy=>MB_vars.M8T1, done=>get_energy_M8T1_done);
+IF get_energy_M8T1_done = TRUE THEN
+Mercury.M8T1:=MB_vars.M8T1;
+state:=29;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+29:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M8T2_done := FALSE;
+get_energy_M8T2(byte1:=5, byte2:=16#38, byte3:=2, energy=>MB_vars.M8T2,done=>get_energy_M8T2_done);
+IF get_energy_M8T2_done = TRUE THEN
+Mercury.M8T2:=MB_vars.M8T2;
+state:=30;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+30:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M9T1_done := FALSE;
+get_energy_M9T1(byte1:=5, byte2:=16#39, byte3:=1, energy=>MB_vars.M9T1, done=>get_energy_M9T1_done);
+IF get_energy_M9T1_done = TRUE THEN
+Mercury.M9T1:=MB_vars.M9T1;
+state:=31;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+31:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M9T2_done := FALSE;
+get_energy_M9T2(byte1:=5, byte2:=16#39, byte3:=2, energy=>MB_vars.M9T2,done=>get_energy_M9T2_done);
+IF get_energy_M9T2_done = TRUE THEN
+Mercury.M9T2:=MB_vars.M9T2;
+state:=32;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+32:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M10T1_done := FALSE;
+get_energy_M10T1(byte1:=5, byte2:=16#3A, byte3:=1, energy=>MB_vars.M10T1, done=>get_energy_M10T1_done);
+IF get_energy_M10T1_done = TRUE THEN
+Mercury.M10T1:=MB_vars.M10T1;
+state:=33;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+33:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M10T2_done := FALSE;
+get_energy_M10T2(byte1:=5, byte2:=16#3A, byte3:=2, energy=>MB_vars.M10T2,done=>get_energy_M10T2_done);
+IF get_energy_M10T2_done = TRUE THEN
+Mercury.M10T2:=MB_vars.M10T2;
+state:=34;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+34:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M11T1_done := FALSE;
+get_energy_M11T1(byte1:=5, byte2:=16#3B, byte3:=1, energy=>MB_vars.M11T1, done=>get_energy_M11T1_done);
+IF get_energy_M11T1_done = TRUE THEN
+Mercury.M11T1:=MB_vars.M11T1;
+state:=35;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+35:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M11T2_done := FALSE;
+get_energy_M11T2(byte1:=5, byte2:=16#3B, byte3:=2, energy=>MB_vars.M11T2,done=>get_energy_M11T2_done);
+IF get_energy_M11T2_done = TRUE THEN
+Mercury.M11T2:=MB_vars.M11T2;
+state:=36;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+36:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M12T1_done := FALSE;
+get_energy_M12T1(byte1:=5, byte2:=16#3C, byte3:=1, energy=>MB_vars.M12T1, done=>get_energy_M12T1_done);
+IF get_energy_M12T1_done = TRUE THEN
+Mercury.M12T1:=MB_vars.M12T1;
+state:=37;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+37:
+tmCheck(in:=FALSE);
+tmCheck(in:=TRUE,pt:=t#2s);
+get_energy_M12T2_done := FALSE;
+get_energy_M12T2(byte1:=5, byte2:=16#3C, byte3:=2, energy=>MB_vars.M12T2,done=>get_energy_M12T2_done);
+IF get_energy_M12T2_done = TRUE THEN
+Mercury.M12T2:=MB_vars.M12T2;
+state:=888;
+ELSIF tmcheck.Q THEN state:=888;
+END_IF
+
+
+
+888:
+Timer1(IN:=NOT Timer1Q , PT:=T#60s , Q=>Timer1Q , ET=> );
+IF timer1.q THEN
+
+state:=0;
+END_IF
+
+END_CASE
+
+FtrigBusy(CLK:=mb.BUSY );
+IF FtrigBusy.Q THEN
+IF mb.Error THEN
+LastModbusError := mb.ErrorDiagnostics;
+LastErrorstate := state;
+CounterError := CounterError + 1;
+ELSE
+CounterSuccess := CounterSuccess + 1;
+END_IF
+END_IF
+
+
+
+SerialLinecontrolCom1(
+mode:=SerialLinemode_kl6_22b_standard,
+pComIn:=ADR(RS485read.MB.InData),
+pComOut:=ADR(RS485read.MB.OutData),
+SizeComIn:=SIZEOF(RS485read.MB.OutData),
+TxBuffer:=TxBufferCom1,
+RxBuffer:=RxBufferCom1,
+Error=>,
+errorid=>);
