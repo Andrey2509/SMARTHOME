@@ -1,3 +1,15 @@
+createState("Temperature_1floor");
+createState("CO2_1_floor");
+createState("Temperature_2floor");
+createState("CO2_2_floor");
+createState("Temperature_sport");
+createState("Temperature_underfloor");
+createState("Humidity_underfloor");
+createState("Temperature_balkon");
+createState("Temperature_street");
+createState("Humidity_street");
+createState("Temperature_balkon");
+
 
 
 createState("html_table2");
