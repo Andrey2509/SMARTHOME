@@ -1,6 +1,6 @@
-createState(полив_запад);
-createState(полив_.юг);
-createState(полив_терраса);
+createState("полив_запад");
+createState("полив_юг");
+createState("полив_терраса");
 
 on({id: 'ical.0.events.0.now.Полив_запад', change: 'ne'}, function (obj) {
     log('Событие по календарю Полив_запад')
