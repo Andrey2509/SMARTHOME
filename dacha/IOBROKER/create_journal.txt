@@ -1,5 +1,12 @@
 createState('Sql_pir_history');
 createState("html_table");
+createState("Count_electro");
+createState("Count_electro");
+createState("Count_electro");
+createState("Count_electro");
+createState("Count_electro");
+createState("Count_electro");
+createState("Count_electro");
 
 var fs = require('fs');
 var glob = require("glob");
