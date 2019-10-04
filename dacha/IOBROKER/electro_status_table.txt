@@ -1,6 +1,16 @@
- 
-
 createState("html_electro_status_table");
+createState("Energy_tarif");
+createState("Uv1");
+createState("Uv2");
+createState("Uv3");
+createState("Ia1");
+createState("Ia2");
+createState("Ia3");
+createState("Pw1");
+createState("Pw2");
+createState("Pw3");
+createState("E_T1");
+createState("E_T2");
 
 on({id: /javascript.0.Uv*/, change: "any"}, function (obj) {
 
